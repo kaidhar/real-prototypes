@@ -1,4 +1,4 @@
-# Platform Prototype Skill - .gitignore
+# Platform Prototype Skill - Git Ignore
 
 # ============================================
 # Node.js / npm
@@ -7,13 +7,33 @@ node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-package-lock.json
-yarn.lock
-pnpm-lock.yaml
-.pnpm-store/
+lerna-debug.log*
+.pnpm-debug.log*
 
 # ============================================
-# Next.js
+# Lock Files
+# ============================================
+# Uncomment these if you want to exclude lock files
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml
+
+# ============================================
+# Environment Variables & Secrets
+# ============================================
+.env
+.env.*
+!.env.example
+*.env
+
+# Credentials
+**/credentials*.json
+**/secrets*.json
+**/*-credentials.*
+**/*-secrets.*
+
+# ============================================
+# Next.js (in example prototypes)
 # ============================================
 .next/
 out/
@@ -23,36 +43,19 @@ dist/
 next-env.d.ts
 
 # ============================================
-# Environment Variables & Secrets
+# Example Projects
 # ============================================
-.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-*.env
+# Exclude node_modules in examples
+examples/*/prototype/node_modules/
+examples/*/prototype/.next/
+examples/*/prototype/out/
+examples/*/prototype/build/
+examples/*/prototype/package-lock.json
 
-# Credentials and sensitive data
-**/credentials.json
-**/secrets.json
-**/*-credentials.*
-**/*-secrets.*
-
-# CLAUDE.md may contain credentials
-# Uncomment if you want to exclude it:
-# CLAUDE.md
-
-# ============================================
-# Captured Platform Data (Optional)
-# ============================================
-# Uncomment these if you don't want to commit captured data:
-# projects/*/references/screenshots/*.png
-# projects/*/references/screenshots/*.jpg
-# projects/*/references/html/*.html
-
-# But DO commit design tokens and manifests:
-!projects/*/references/design-tokens.json
-!projects/*/references/manifest.json
+# Keep design tokens and manifests
+!examples/*/references/design-tokens.json
+!examples/*/references/manifest.json
+!examples/*/FEATURES.md
 
 # ============================================
 # Build & Generated Files
@@ -63,15 +66,14 @@ next-env.d.ts
 *.pid.lock
 .DS_Store
 Thumbs.db
+*.swp
+*~
 
 # ============================================
 # IDE & Editor Files
 # ============================================
 # VSCode
 .vscode/
-!.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
 !.vscode/extensions.json
 
 # IntelliJ / WebStorm
@@ -80,20 +82,14 @@ Thumbs.db
 *.iws
 *.ipr
 
-# Sublime Text
+# Sublime
 *.sublime-project
 *.sublime-workspace
 
 # Vim
 *.swp
 *.swo
-*~
 .*.swp
-
-# Emacs
-*~
-\#*\#
-.\#*
 
 # ============================================
 # OS Files
@@ -117,102 +113,76 @@ $RECYCLE.BIN/
 *~
 
 # ============================================
-# Testing
+# Testing & Coverage
 # ============================================
 coverage/
 .nyc_output/
 *.lcov
 .coverage
 htmlcov/
-*.cover
-.hypothesis/
 .pytest_cache/
-
-# ============================================
-# Logs & Temporary Files
-# ============================================
-*.log
-logs/
-*.tmp
-*.temp
-.cache/
-.temp/
-tmp/
-temp/
+test-results/
 
 # ============================================
 # Browser Automation
 # ============================================
-# Playwright / Puppeteer
 .playwright/
 playwright-report/
-test-results/
 screenshots/temp/
 *.trace
 
 # ============================================
-# TypeScript
+# Temporary Files
 # ============================================
-*.tsbuildinfo
-tsconfig.tsbuildinfo
+*.tmp
+*.temp
+.cache/
+tmp/
+temp/
 
 # ============================================
-# Miscellaneous
+# Backup Files
 # ============================================
-# Backup files
 *.backup
 *.bak
 *.old
 
-# Archive files
+# ============================================
+# Archives
+# ============================================
 *.zip
 *.tar
 *.tar.gz
 *.rar
 
-# Lock files (optional - some teams commit these)
-# Uncomment if you don't want to commit lock files:
-# package-lock.json
-# yarn.lock
-# pnpm-lock.yaml
-
 # ============================================
-# Project-Specific Exclusions
+# Project-Specific
 # ============================================
-# Exclude large screenshot directories (optional)
-# Uncomment if screenshots are too large for git:
-# projects/*/references/screenshots/
-
-# Exclude prototype node_modules
-projects/*/prototype/node_modules/
-projects/*/prototype/.next/
-projects/*/prototype/out/
-projects/*/prototype/build/
-
-# Exclude CLI output
+# CLI output
 cli-output/
 validation-reports/
+
+# Runtime data
+captured-data/temp/
+
+# ============================================
+# Claude Code Configuration
+# ============================================
+# Exclude Claude Code settings files
+**/settings.json
+**/settings.local.json
+../../settings.json
+../../settings.local.json
+
+# Exclude other Claude directories
+**/commands/
+../../commands/
 
 # ============================================
 # Keep These Files
 # ============================================
-# Force include important files even if parent is ignored
-!.gitkeep
 !.gitignore
+!.gitkeep
 !README.md
 !LICENSE
 !SKILL.md
-
-# Keep example reference files
-!examples/*/references/design-tokens.json
-!examples/*/references/manifest.json
-!examples/*/FEATURES.md
-
-# ============================================
-# Claude Code
-# ============================================
-# Exclude Claude state/cache files but keep skills
-.claude/state/
-.claude/cache/
-.claude/logs/
-.claude/settings.local.json

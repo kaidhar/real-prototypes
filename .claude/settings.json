@@ -1,0 +1,37 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run:*)",
+      "Bash(npm install:*)",
+      "Bash(npm i:*)",
+      "Bash(npm ci:*)",
+      "Bash(npm test:*)",
+      "Bash(npm exec:*)",
+      "Bash(npm create:*)",
+      "Bash(npx:*)",
+      "Bash(pnpm:*)",
+      "Bash(yarn:*)",
+      "Bash(bun:*)",
+      "Bash(node:*)",
+      "Bash(git:*)",
+      "Bash(ls:*)",
+      "Bash(mkdir:*)",
+      "Bash(cp:*)",
+      "Bash(mv:*)",
+      "Bash(rm:*)",
+      "Bash(cat:*)",
+      "Bash(head:*)",
+      "Bash(tail:*)",
+      "Bash(next:*)",
+      "Bash(playwright:*)",
+      "Bash(npx playwright:*)",
+      "Bash(tsc:*)",
+      "Bash(tsx:*)",
+      "Bash(eslint:*)",
+      "Bash(prettier:*)",
+      "Bash(tailwindcss:*)",
+      "Bash(agent-browser:*)"
+    ],
+    "deny": []
+  }
+}

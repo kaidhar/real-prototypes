@@ -1,0 +1,302 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://platform-prototype-skill/manifest-schema.json",
+  "title": "Platform Prototype Manifest",
+  "description": "Schema for validating platform prototype reference manifest files",
+  "type": "object",
+  "required": ["platform", "pages"],
+  "properties": {
+    "platform": {
+      "type": "object",
+      "description": "Platform identification and metadata",
+      "required": ["name"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Name of the platform being prototyped",
+          "minLength": 1
+        },
+        "url": {
+          "type": "string",
+          "description": "Base URL of the platform",
+          "format": "uri"
+        },
+        "version": {
+          "type": "string",
+          "description": "Version identifier for the reference capture"
+        },
+        "capturedAt": {
+          "type": "string",
+          "description": "ISO 8601 timestamp when references were captured",
+          "format": "date-time"
+        }
+      },
+      "additionalProperties": true
+    },
+    "pages": {
+      "type": "array",
+      "description": "List of captured pages/views",
+      "items": {
+        "type": "object",
+        "required": ["id", "name"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier for the page",
+            "pattern": "^[a-z0-9-]+$"
+          },
+          "name": {
+            "type": "string",
+            "description": "Human-readable name of the page"
+          },
+          "path": {
+            "type": "string",
+            "description": "URL path or route for the page"
+          },
+          "description": {
+            "type": "string",
+            "description": "Brief description of the page purpose"
+          },
+          "screenshots": {
+            "type": "array",
+            "description": "Screenshot files for this page",
+            "items": {
+              "type": "object",
+              "required": ["file"],
+              "properties": {
+                "file": {
+                  "type": "string",
+                  "description": "Filename of the screenshot"
+                },
+                "viewport": {
+                  "type": "string",
+                  "description": "Viewport size (e.g., 'desktop', 'mobile', '1920x1080')"
+                },
+                "state": {
+                  "type": "string",
+                  "description": "UI state captured (e.g., 'default', 'hover', 'expanded')"
+                },
+                "description": {
+                  "type": "string",
+                  "description": "Description of what the screenshot shows"
+                }
+              },
+              "additionalProperties": true
+            }
+          },
+          "html": {
+            "type": "object",
+            "description": "HTML capture for this page",
+            "properties": {
+              "file": {
+                "type": "string",
+                "description": "Filename of the HTML file"
+              },
+              "capturedAt": {
+                "type": "string",
+                "description": "ISO 8601 timestamp when HTML was captured",
+                "format": "date-time"
+              }
+            },
+            "additionalProperties": true
+          },
+          "components": {
+            "type": "array",
+            "description": "Key components identified on this page",
+            "items": {
+              "type": "string"
+            }
+          },
+          "priority": {
+            "type": "string",
+            "description": "Implementation priority",
+            "enum": ["high", "medium", "low"]
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "designTokens": {
+      "type": "object",
+      "description": "Design tokens extracted from the platform",
+      "properties": {
+        "colors": {
+          "type": "object",
+          "description": "Color palette",
+          "properties": {
+            "primary": {
+              "type": "string",
+              "description": "Primary brand color"
+            },
+            "secondary": {
+              "type": "string",
+              "description": "Secondary brand color"
+            },
+            "background": {
+              "type": "string",
+              "description": "Main background color"
+            },
+            "surface": {
+              "type": "string",
+              "description": "Surface/card background color"
+            },
+            "text": {
+              "type": "string",
+              "description": "Primary text color"
+            },
+            "textSecondary": {
+              "type": "string",
+              "description": "Secondary text color"
+            },
+            "border": {
+              "type": "string",
+              "description": "Default border color"
+            },
+            "accent": {
+              "type": "string",
+              "description": "Accent/highlight color"
+            },
+            "error": {
+              "type": "string",
+              "description": "Error state color"
+            },
+            "success": {
+              "type": "string",
+              "description": "Success state color"
+            },
+            "warning": {
+              "type": "string",
+              "description": "Warning state color"
+            }
+          },
+          "additionalProperties": true
+        },
+        "typography": {
+          "type": "object",
+          "description": "Typography settings",
+          "properties": {
+            "fontFamily": {
+              "type": "string",
+              "description": "Primary font family stack"
+            },
+            "fontFamilyMono": {
+              "type": "string",
+              "description": "Monospace font family stack"
+            },
+            "baseFontSize": {
+              "type": "string",
+              "description": "Base font size (e.g., '16px')"
+            },
+            "lineHeight": {
+              "type": "string",
+              "description": "Default line height"
+            },
+            "headings": {
+              "type": "object",
+              "description": "Heading styles",
+              "additionalProperties": {
+                "type": "object",
+                "properties": {
+                  "fontSize": { "type": "string" },
+                  "fontWeight": { "type": "string" },
+                  "lineHeight": { "type": "string" }
+                }
+              }
+            }
+          },
+          "additionalProperties": true
+        },
+        "spacing": {
+          "type": "object",
+          "description": "Spacing scale",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "borderRadius": {
+          "type": "object",
+          "description": "Border radius values",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "shadows": {
+          "type": "object",
+          "description": "Box shadow definitions",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "breakpoints": {
+          "type": "object",
+          "description": "Responsive breakpoints",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "transitions": {
+          "type": "object",
+          "description": "Transition/animation settings",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "components": {
+      "type": "array",
+      "description": "Global component inventory",
+      "items": {
+        "type": "object",
+        "required": ["name"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Component name"
+          },
+          "description": {
+            "type": "string",
+            "description": "Component description"
+          },
+          "usedOn": {
+            "type": "array",
+            "description": "Page IDs where this component appears",
+            "items": {
+              "type": "string"
+            }
+          },
+          "variants": {
+            "type": "array",
+            "description": "Component variants",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Additional metadata",
+      "properties": {
+        "generatedAt": {
+          "type": "string",
+          "description": "ISO 8601 timestamp when manifest was generated",
+          "format": "date-time"
+        },
+        "generatedBy": {
+          "type": "string",
+          "description": "Tool or person that generated the manifest"
+        },
+        "notes": {
+          "type": "string",
+          "description": "Additional notes about the reference capture"
+        }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true
+}
