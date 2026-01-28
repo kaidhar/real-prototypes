@@ -1,0 +1,224 @@
+# Platform Prototype Skill - .gitignore
+
+# ============================================
+# Node.js / npm
+# ============================================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+.pnpm-store/
+
+# ============================================
+# Next.js
+# ============================================
+.next/
+out/
+build/
+dist/
+*.tsbuildinfo
+next-env.d.ts
+
+# ============================================
+# Environment Variables & Secrets
+# ============================================
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.env
+
+# Credentials and sensitive data
+**/credentials.json
+**/secrets.json
+**/*-credentials.*
+**/*-secrets.*
+
+# CLAUDE.md may contain credentials
+# Uncomment if you want to exclude it:
+# CLAUDE.md
+
+# ============================================
+# Captured Platform Data (Optional)
+# ============================================
+# Uncomment these if you don't want to commit captured data:
+# projects/*/references/screenshots/*.png
+# projects/*/references/screenshots/*.jpg
+# projects/*/references/html/*.html
+
+# But DO commit design tokens and manifests:
+!projects/*/references/design-tokens.json
+!projects/*/references/manifest.json
+
+# ============================================
+# Build & Generated Files
+# ============================================
+*.log
+*.pid
+*.seed
+*.pid.lock
+.DS_Store
+Thumbs.db
+
+# ============================================
+# IDE & Editor Files
+# ============================================
+# VSCode
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# IntelliJ / WebStorm
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+*.swp
+*.swo
+*~
+.*.swp
+
+# Emacs
+*~
+\#*\#
+.\#*
+
+# ============================================
+# OS Files
+# ============================================
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+.directory
+*~
+
+# ============================================
+# Testing
+# ============================================
+coverage/
+.nyc_output/
+*.lcov
+.coverage
+htmlcov/
+*.cover
+.hypothesis/
+.pytest_cache/
+
+# ============================================
+# Logs & Temporary Files
+# ============================================
+*.log
+logs/
+*.tmp
+*.temp
+.cache/
+.temp/
+tmp/
+temp/
+
+# ============================================
+# Browser Automation
+# ============================================
+# Playwright / Puppeteer
+.playwright/
+playwright-report/
+test-results/
+screenshots/temp/
+*.trace
+
+# ============================================
+# TypeScript
+# ============================================
+*.tsbuildinfo
+tsconfig.tsbuildinfo
+
+# ============================================
+# Miscellaneous
+# ============================================
+# Backup files
+*.backup
+*.bak
+*.old
+
+# Archive files
+*.zip
+*.tar
+*.tar.gz
+*.rar
+
+# Lock files (optional - some teams commit these)
+# Uncomment if you don't want to commit lock files:
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml
+
+# ============================================
+# Project-Specific Exclusions
+# ============================================
+# Exclude large screenshot directories (optional)
+# Uncomment if screenshots are too large for git:
+# projects/*/references/screenshots/
+
+# Exclude prototype node_modules
+projects/*/prototype/node_modules/
+projects/*/prototype/.next/
+projects/*/prototype/out/
+projects/*/prototype/build/
+
+# Exclude CLI output
+cli-output/
+validation-reports/
+
+# ============================================
+# Keep These Files
+# ============================================
+# Force include important files even if parent is ignored
+!.gitkeep
+!.gitignore
+!README.md
+!LICENSE
+!SKILL.md
+
+# Keep example reference files
+!examples/*/references/design-tokens.json
+!examples/*/references/manifest.json
+!examples/*/FEATURES.md
+
+# ============================================
+# Claude Code (Optional)
+# ============================================
+# Uncomment to exclude Claude Code directory:
+/.claude
+
+# But keep the skill itself
+!.claude/skills/
+!.claude/skills/**/*
+
+# Exclude Claude state files
+.claude/state/
+.claude/cache/
+.claude/logs/

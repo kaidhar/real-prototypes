@@ -1,0 +1,25 @@
+{
+  "name": "real-prototypes",
+  "version": "1.0.0",
+  "description": "Visual regression testing and platform prototyping system",
+  "scripts": {
+    "test:visual": "node scripts/visual-regression-test.js",
+    "test:visual:ci": "node scripts/visual-regression-test.js --ci",
+    "test:components": "node scripts/test-components.js --all",
+    "test:component": "node scripts/test-components.js --component",
+    "ci:visual": "./scripts/ci-visual-regression.sh"
+  },
+  "devDependencies": {
+    "@types/pixelmatch": "^5.2.6",
+    "@types/pngjs": "^6.0.5",
+    "pixelmatch": "^7.1.0",
+    "playwright": "^1.58.0",
+    "pngjs": "^7.0.0"
+  },
+  "dependencies": {
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "jsdom": "^27.4.0",
+    "tailwind-merge": "^3.4.0"
+  }
+}
