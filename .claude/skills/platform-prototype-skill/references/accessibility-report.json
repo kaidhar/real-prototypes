@@ -1,0 +1,253 @@
+{
+  "timestamp": "2026-01-26T18:27:12.016Z",
+  "wcagLevel": "AA",
+  "totalFiles": 5,
+  "totalIssues": 24,
+  "totalFixes": 5,
+  "results": [
+    {
+      "file": ".claude/skills/platform-prototype-skill/templates/dashboard-widget.tsx.template",
+      "issueCount": 4,
+      "fixCount": 1,
+      "issues": [
+        {
+          "type": "missing-aria-label",
+          "severity": "error",
+          "element": "button",
+          "line": 58,
+          "message": "button at line 58 missing aria-label or associated label"
+        },
+        {
+          "type": "missing-aria-label",
+          "severity": "error",
+          "element": "button",
+          "line": 65,
+          "message": "button at line 65 missing aria-label or associated label"
+        },
+        {
+          "type": "missing-aria-label",
+          "severity": "error",
+          "element": "button",
+          "line": 83,
+          "message": "button at line 83 missing aria-label or associated label"
+        },
+        {
+          "type": "missing-focus-indicator",
+          "severity": "error",
+          "message": "No focus styles detected. Add focus:ring or focus-visible styles."
+        }
+      ],
+      "fixes": [
+        {
+          "type": "add-focus-styles",
+          "description": "Add focus indicators to interactive elements",
+          "implementation": "Add focus:ring-2 focus:ring-platform-primary focus:ring-offset-2 to buttons/links"
+        }
+      ]
+    },
+    {
+      "file": ".claude/skills/platform-prototype-skill/templates/data-table.tsx.template",
+      "issueCount": 2,
+      "fixCount": 1,
+      "issues": [
+        {
+          "type": "missing-aria-label",
+          "severity": "error",
+          "element": "button",
+          "line": 99,
+          "message": "button at line 99 missing aria-label or associated label"
+        },
+        {
+          "type": "missing-focus-indicator",
+          "severity": "error",
+          "message": "No focus styles detected. Add focus:ring or focus-visible styles."
+        }
+      ],
+      "fixes": [
+        {
+          "type": "add-focus-styles",
+          "description": "Add focus indicators to interactive elements",
+          "implementation": "Add focus:ring-2 focus:ring-platform-primary focus:ring-offset-2 to buttons/links"
+        }
+      ]
+    },
+    {
+      "file": ".claude/skills/platform-prototype-skill/templates/form-section.tsx.template",
+      "issueCount": 6,
+      "fixCount": 1,
+      "issues": [
+        {
+          "type": "color-contrast",
+          "severity": "warning",
+          "message": "Found 1 color utilities. Manual contrast check recommended.",
+          "colors": [
+            "text-red-500"
+          ]
+        },
+        {
+          "type": "missing-aria-label",
+          "severity": "error",
+          "element": "button",
+          "line": 220,
+          "message": "button at line 220 missing aria-label or associated label"
+        },
+        {
+          "type": "missing-aria-label",
+          "severity": "error",
+          "element": "button",
+          "line": 230,
+          "message": "button at line 230 missing aria-label or associated label"
+        },
+        {
+          "type": "missing-aria-label",
+          "severity": "error",
+          "element": "input",
+          "line": 92,
+          "message": "input at line 92 missing aria-label or associated label"
+        },
+        {
+          "type": "missing-aria-label",
+          "severity": "error",
+          "element": "input",
+          "line": 117,
+          "message": "input at line 117 missing aria-label or associated label"
+        },
+        {
+          "type": "keyboard-navigation",
+          "severity": "warning",
+          "message": "Click handlers without keyboard handlers. Ensure keyboard accessibility."
+        }
+      ],
+      "fixes": [
+        {
+          "type": "add-keyboard-handlers",
+          "description": "Add keyboard event handlers",
+          "implementation": "Add onKeyDown={(e) => e.key === \"Enter\" && handleClick()} to clickable elements"
+        }
+      ]
+    },
+    {
+      "file": ".claude/skills/platform-prototype-skill/templates/modal-dialog.tsx.template",
+      "issueCount": 7,
+      "fixCount": 1,
+      "issues": [
+        {
+          "type": "color-contrast",
+          "severity": "warning",
+          "message": "Found 2 color utilities. Manual contrast check recommended.",
+          "colors": [
+            "bg-red-600",
+            "bg-red-700"
+          ]
+        },
+        {
+          "type": "missing-aria-label",
+          "severity": "error",
+          "element": "button",
+          "line": 99,
+          "message": "button at line 99 missing aria-label or associated label"
+        },
+        {
+          "type": "missing-aria-label",
+          "severity": "error",
+          "element": "button",
+          "line": 107,
+          "message": "button at line 107 missing aria-label or associated label"
+        },
+        {
+          "type": "missing-aria-label",
+          "severity": "error",
+          "element": "button",
+          "line": 181,
+          "message": "button at line 181 missing aria-label or associated label"
+        },
+        {
+          "type": "missing-aria-label",
+          "severity": "error",
+          "element": "button",
+          "line": 190,
+          "message": "button at line 190 missing aria-label or associated label"
+        },
+        {
+          "type": "missing-aria-label",
+          "severity": "error",
+          "element": "button",
+          "line": 211,
+          "message": "button at line 211 missing aria-label or associated label"
+        },
+        {
+          "type": "keyboard-navigation",
+          "severity": "warning",
+          "message": "Click handlers without keyboard handlers. Ensure keyboard accessibility."
+        }
+      ],
+      "fixes": [
+        {
+          "type": "add-keyboard-handlers",
+          "description": "Add keyboard event handlers",
+          "implementation": "Add onKeyDown={(e) => e.key === \"Enter\" && handleClick()} to clickable elements"
+        }
+      ]
+    },
+    {
+      "file": ".claude/skills/platform-prototype-skill/templates/nav-item.tsx.template",
+      "issueCount": 5,
+      "fixCount": 1,
+      "issues": [
+        {
+          "type": "missing-aria-label",
+          "severity": "error",
+          "element": "button",
+          "line": 87,
+          "message": "button at line 87 missing aria-label or associated label"
+        },
+        {
+          "type": "missing-aria-label",
+          "severity": "error",
+          "element": "button",
+          "line": 114,
+          "message": "button at line 114 missing aria-label or associated label"
+        },
+        {
+          "type": "missing-aria-label",
+          "severity": "error",
+          "element": "button",
+          "line": 152,
+          "message": "button at line 152 missing aria-label or associated label"
+        },
+        {
+          "type": "missing-aria-label",
+          "severity": "error",
+          "element": "button",
+          "line": 184,
+          "message": "button at line 184 missing aria-label or associated label"
+        },
+        {
+          "type": "keyboard-navigation",
+          "severity": "warning",
+          "message": "Click handlers without keyboard handlers. Ensure keyboard accessibility."
+        }
+      ],
+      "fixes": [
+        {
+          "type": "add-keyboard-handlers",
+          "description": "Add keyboard event handlers",
+          "implementation": "Add onKeyDown={(e) => e.key === \"Enter\" && handleClick()} to clickable elements"
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "byType": {
+      "missing-aria-label": 17,
+      "missing-focus-indicator": 2,
+      "color-contrast": 2,
+      "keyboard-navigation": 3
+    },
+    "bySeverity": {
+      "error": 19,
+      "warning": 5,
+      "info": 0
+    }
+  }
+}

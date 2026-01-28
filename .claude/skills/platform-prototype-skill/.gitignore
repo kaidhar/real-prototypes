@@ -1,0 +1,175 @@
+# Platform Prototype Skill - Git Ignore
+
+# ============================================
+# Node.js / npm
+# ============================================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
+
+# ============================================
+# Lock Files
+# ============================================
+# Uncomment these if you want to exclude lock files
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml
+
+# ============================================
+# Environment Variables & Secrets
+# ============================================
+.env
+.env.*
+!.env.example
+*.env
+
+# Credentials
+**/credentials*.json
+**/secrets*.json
+**/*-credentials.*
+**/*-secrets.*
+
+# ============================================
+# Next.js (in example prototypes)
+# ============================================
+.next/
+out/
+build/
+dist/
+*.tsbuildinfo
+next-env.d.ts
+
+# ============================================
+# Example Projects
+# ============================================
+# Exclude node_modules in examples
+examples/*/prototype/node_modules/
+examples/*/prototype/.next/
+examples/*/prototype/out/
+examples/*/prototype/build/
+examples/*/prototype/package-lock.json
+
+# Keep design tokens and manifests
+!examples/*/references/design-tokens.json
+!examples/*/references/manifest.json
+!examples/*/FEATURES.md
+
+# ============================================
+# Build & Generated Files
+# ============================================
+*.log
+*.pid
+*.seed
+*.pid.lock
+.DS_Store
+Thumbs.db
+*.swp
+*~
+
+# ============================================
+# IDE & Editor Files
+# ============================================
+# VSCode
+.vscode/
+!.vscode/extensions.json
+
+# IntelliJ / WebStorm
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# Sublime
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+*.swp
+*.swo
+.*.swp
+
+# ============================================
+# OS Files
+# ============================================
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+.directory
+*~
+
+# ============================================
+# Testing & Coverage
+# ============================================
+coverage/
+.nyc_output/
+*.lcov
+.coverage
+htmlcov/
+.pytest_cache/
+test-results/
+
+# ============================================
+# Browser Automation
+# ============================================
+.playwright/
+playwright-report/
+screenshots/temp/
+*.trace
+
+# ============================================
+# Temporary Files
+# ============================================
+*.tmp
+*.temp
+.cache/
+tmp/
+temp/
+
+# ============================================
+# Backup Files
+# ============================================
+*.backup
+*.bak
+*.old
+
+# ============================================
+# Archives
+# ============================================
+*.zip
+*.tar
+*.tar.gz
+*.rar
+
+# ============================================
+# Project-Specific
+# ============================================
+# CLI output
+cli-output/
+validation-reports/
+
+# Runtime data
+captured-data/temp/
+
+# ============================================
+# Keep These Files
+# ============================================
+!.gitignore
+!.gitkeep
+!README.md
+!LICENSE
+!SKILL.md

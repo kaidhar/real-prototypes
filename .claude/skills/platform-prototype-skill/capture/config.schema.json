@@ -1,0 +1,170 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Platform Capture Configuration",
+  "type": "object",
+  "required": ["platform", "auth", "capture"],
+  "properties": {
+    "platform": {
+      "type": "object",
+      "required": ["name", "baseUrl"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Human-readable platform name"
+        },
+        "baseUrl": {
+          "type": "string",
+          "format": "uri",
+          "description": "Base URL of the platform"
+        }
+      }
+    },
+    "auth": {
+      "type": "object",
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["form", "oauth", "token", "none"],
+          "description": "Authentication method"
+        },
+        "loginUrl": {
+          "type": "string",
+          "description": "Login page URL path"
+        },
+        "credentials": {
+          "type": "object",
+          "properties": {
+            "emailField": { "type": "string", "default": "email" },
+            "passwordField": { "type": "string", "default": "password" },
+            "submitButton": { "type": "string", "default": "Sign in" }
+          }
+        },
+        "successIndicator": {
+          "type": "object",
+          "properties": {
+            "type": { "type": "string", "enum": ["url", "element", "cookie"] },
+            "value": { "type": "string" }
+          }
+        }
+      }
+    },
+    "capture": {
+      "type": "object",
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": ["auto", "manual", "hybrid"],
+          "default": "auto",
+          "description": "auto=discover all pages, manual=specified pages only, hybrid=both"
+        },
+        "maxPages": {
+          "type": "integer",
+          "default": 100,
+          "description": "Maximum pages to capture in auto mode"
+        },
+        "maxDepth": {
+          "type": "integer",
+          "default": 5,
+          "description": "Maximum click depth from entry point"
+        },
+        "viewports": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": { "type": "string" },
+              "width": { "type": "integer" },
+              "height": { "type": "integer" }
+            }
+          },
+          "default": [
+            { "name": "desktop", "width": 1920, "height": 1080 },
+            { "name": "tablet", "width": 768, "height": 1024 },
+            { "name": "mobile", "width": 375, "height": 812 }
+          ]
+        },
+        "waitAfterLoad": {
+          "type": "integer",
+          "default": 2000,
+          "description": "Milliseconds to wait after page load"
+        },
+        "waitAfterInteraction": {
+          "type": "integer",
+          "default": 1000,
+          "description": "Milliseconds to wait after clicking/interacting"
+        },
+        "interactions": {
+          "type": "object",
+          "properties": {
+            "clickButtons": { "type": "boolean", "default": true },
+            "clickDropdowns": { "type": "boolean", "default": true },
+            "clickTabs": { "type": "boolean", "default": true },
+            "clickTableRows": { "type": "boolean", "default": true },
+            "clickModals": { "type": "boolean", "default": true },
+            "hoverElements": { "type": "boolean", "default": true },
+            "expandAccordions": { "type": "boolean", "default": true }
+          }
+        },
+        "states": {
+          "type": "object",
+          "properties": {
+            "captureEmpty": { "type": "boolean", "default": true },
+            "captureLoading": { "type": "boolean", "default": false },
+            "captureError": { "type": "boolean", "default": false },
+            "captureHover": { "type": "boolean", "default": true }
+          }
+        },
+        "exclude": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "URL patterns to exclude (regex)",
+          "default": ["/logout", "/signout", "/delete", "/remove"]
+        },
+        "include": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "URL patterns to include (regex) - if specified, only these are captured"
+        }
+      }
+    },
+    "output": {
+      "type": "object",
+      "properties": {
+        "directory": {
+          "type": "string",
+          "default": "./references"
+        },
+        "screenshots": { "type": "boolean", "default": true },
+        "html": { "type": "boolean", "default": true },
+        "designTokens": { "type": "boolean", "default": true },
+        "manifest": { "type": "boolean", "default": true }
+      }
+    },
+    "validation": {
+      "type": "object",
+      "properties": {
+        "requireDetailPages": {
+          "type": "boolean",
+          "default": true,
+          "description": "Fail if list pages exist without corresponding detail pages"
+        },
+        "requireAllTabs": {
+          "type": "boolean",
+          "default": true,
+          "description": "Fail if tabs are detected but not all captured"
+        },
+        "minColors": {
+          "type": "integer",
+          "default": 10,
+          "description": "Minimum unique colors to extract"
+        },
+        "minPages": {
+          "type": "integer",
+          "default": 5,
+          "description": "Minimum pages to capture"
+        }
+      }
+    }
+  }
+}

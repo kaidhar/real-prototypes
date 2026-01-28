@@ -1,0 +1,265 @@
+import React from "react";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { ChevronDown, ChevronRight } from "lucide-react";
+
+interface NavItemProps {
+  href?: string;
+  label: string;
+  icon?: React.ReactNode;
+  isActive?: boolean;
+  isCollapsed?: boolean;
+  badge?: string | number;
+  onClick?: () => void;
+  className?: string;
+}
+
+export function NavItem({
+  href,
+  label = "{/* FEATURE_TITLE */}",
+  icon,
+  isActive = false,
+  isCollapsed = false,
+  badge,
+  onClick,
+  className = "",
+}: NavItemProps) {
+  const baseClasses = `
+    w-full flex items-center gap-3 px-3 py-2 rounded-md
+    text-sm font-medium transition-colors
+    focus:outline-none focus-visible:ring-2 focus-visible:ring-platform-primary focus-visible:ring-offset-2
+    ${
+      isActive
+        ? "bg-platform-primary/10 text-platform-primary"
+        : "text-platform-foreground/70 hover:text-platform-foreground hover:bg-platform-secondary/10"
+    }
+    ${className}
+  `;
+
+  const content = (
+    <>
+      {icon && (
+        <span className="flex-shrink-0 w-5 h-5" aria-hidden="true">
+          {icon}
+        </span>
+      )}
+      {!isCollapsed && (
+        <>
+          <span className="flex-1 truncate">{label}</span>
+          {badge !== undefined && (
+            <span
+              className="flex-shrink-0 px-2 py-0.5 text-xs font-medium rounded-full bg-platform-primary/10 text-platform-primary"
+              aria-label={`${badge} items`}
+            >
+              {badge}
+            </span>
+          )}
+        </>
+      )}
+    </>
+  );
+
+  // Wrap in tooltip when collapsed
+  const wrappedContent = isCollapsed ? (
+    <TooltipProvider>
+      <Tooltip delayDuration={0}>
+        <TooltipTrigger asChild>
+          {href ? (
+            <Link
+              href={href}
+              className={baseClasses}
+              aria-current={isActive ? "page" : undefined}
+            >
+              {content}
+            </Link>
+          ) : (
+            <button
+              type="button"
+              className={baseClasses}
+              onClick={onClick}
+              aria-pressed={isActive}
+            >
+              {content}
+            </button>
+          )}
+        </TooltipTrigger>
+        <TooltipContent
+          side="right"
+          className="bg-platform-foreground text-platform-background"
+        >
+          <p>{label}</p>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  ) : href ? (
+    <Link
+      href={href}
+      className={baseClasses}
+      aria-current={isActive ? "page" : undefined}
+    >
+      {content}
+    </Link>
+  ) : (
+    <button
+      type="button"
+      className={baseClasses}
+      onClick={onClick}
+      aria-pressed={isActive}
+    >
+      {content}
+    </button>
+  );
+
+  return wrappedContent;
+}
+
+// Nested navigation group
+interface NavGroupProps {
+  label: string;
+  icon?: React.ReactNode;
+  children: React.ReactNode;
+  defaultOpen?: boolean;
+  isCollapsed?: boolean;
+  className?: string;
+}
+
+export function NavGroup({
+  label = "{/* FEATURE_TITLE */}",
+  icon,
+  children,
+  defaultOpen = false,
+  isCollapsed = false,
+  className = "",
+}: NavGroupProps) {
+  const [isOpen, setIsOpen] = React.useState(defaultOpen);
+
+  if (isCollapsed) {
+    return (
+      <TooltipProvider>
+        <Tooltip delayDuration={0}>
+          <TooltipTrigger asChild>
+            <button
+              type="button"
+              className={`
+                w-full flex items-center justify-center p-2 rounded-md
+                text-platform-foreground/70 hover:text-platform-foreground hover:bg-platform-secondary/10
+                transition-colors
+                ${className}
+              `}
+              onClick={() => setIsOpen(!isOpen)}
+              aria-expanded={isOpen}
+            >
+              {icon && (
+                <span className="w-5 h-5" aria-hidden="true">
+                  {icon}
+                </span>
+              )}
+            </button>
+          </TooltipTrigger>
+          <TooltipContent
+            side="right"
+            className="bg-platform-foreground text-platform-background"
+          >
+            <p>{label}</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    );
+  }
+
+  return (
+    <Collapsible open={isOpen} onOpenChange={setIsOpen} className={className}>
+      <CollapsibleTrigger asChild>
+        <button
+          type="button"
+          className={`
+            w-full flex items-center gap-3 px-3 py-2 rounded-md
+            text-sm font-medium text-platform-foreground/70
+            hover:text-platform-foreground hover:bg-platform-secondary/10
+            transition-colors
+            focus:outline-none focus-visible:ring-2 focus-visible:ring-platform-primary focus-visible:ring-offset-2
+          `}
+          aria-expanded={isOpen}
+        >
+          {icon && (
+            <span className="flex-shrink-0 w-5 h-5" aria-hidden="true">
+              {icon}
+            </span>
+          )}
+          <span className="flex-1 text-left truncate">{label}</span>
+          {isOpen ? (
+            <ChevronDown className="flex-shrink-0 w-4 h-4" aria-hidden="true" />
+          ) : (
+            <ChevronRight className="flex-shrink-0 w-4 h-4" aria-hidden="true" />
+          )}
+        </button>
+      </CollapsibleTrigger>
+      <CollapsibleContent className="pl-4 mt-1 space-y-1">
+        {/* FEATURE_CONTENT */}
+        {children}
+      </CollapsibleContent>
+    </Collapsible>
+  );
+}
+
+// Navigation section with label
+interface NavSectionProps {
+  label?: string;
+  children: React.ReactNode;
+  isCollapsed?: boolean;
+  className?: string;
+}
+
+export function NavSection({
+  label,
+  children,
+  isCollapsed = false,
+  className = "",
+}: NavSectionProps) {
+  return (
+    <nav className={`space-y-1 ${className}`} aria-label={label}>
+      {label && !isCollapsed && (
+        <h3 className="px-3 py-2 text-xs font-semibold uppercase tracking-wider text-platform-foreground/50">
+          {label}
+        </h3>
+      )}
+      {isCollapsed && label && (
+        <div className="h-px mx-3 my-2 bg-platform-secondary/20" aria-hidden="true" />
+      )}
+      {children}
+    </nav>
+  );
+}
+
+// Example usage:
+// Basic navigation:
+// <NavSection label="Main">
+//   <NavItem href="/" label="Dashboard" icon={<HomeIcon />} isActive />
+//   <NavItem href="/analytics" label="Analytics" icon={<ChartIcon />} badge={3} />
+//   <NavItem href="/settings" label="Settings" icon={<SettingsIcon />} />
+// </NavSection>
+
+// Nested navigation:
+// <NavSection label="Content">
+//   <NavGroup label="Products" icon={<BoxIcon />} defaultOpen>
+//     <NavItem href="/products" label="All Products" />
+//     <NavItem href="/products/new" label="Add New" />
+//     <NavItem href="/products/categories" label="Categories" />
+//   </NavGroup>
+// </NavSection>
+
+// Collapsed sidebar:
+// <NavSection isCollapsed={isSidebarCollapsed}>
+//   <NavItem href="/" label="Dashboard" icon={<HomeIcon />} isCollapsed={isSidebarCollapsed} />
+// </NavSection>
