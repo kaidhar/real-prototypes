@@ -32,13 +32,59 @@ Enterprise-grade tool for capturing web platforms and generating pixel-perfect p
 
 ---
 
+## CRITICAL: Browser Automation Setup
+
+**BEFORE any capture or screenshot operation, you MUST:**
+
+1. **Invoke the agent-browser skill** using the Skill tool:
+   ```
+   Skill: agent-browser-skill
+   ```
+
+2. **Then use agent-browser commands** for all browser operations:
+   ```bash
+   agent-browser open <url>           # Navigate to page
+   agent-browser snapshot -i          # Get interactive elements
+   agent-browser fill @e1 "email"     # Fill form fields
+   agent-browser click @e2            # Click buttons
+   agent-browser screenshot path.png  # Take screenshots
+   ```
+
+3. **Do NOT** attempt to run `node cli.js capture` without first having agent-browser available
+
+**Why this matters:** The capture engine relies on agent-browser commands. Without invoking the agent-browser skill first, screenshot and navigation commands will fail.
+
+---
+
 ## Quick Start
+
+### Option 1: Direct Browser Automation (Recommended)
+
+1. **First, invoke agent-browser skill** (required before any browser operations)
+2. **Then use browser commands:**
+
+```bash
+# Navigate and authenticate
+agent-browser open https://app.example.com/login
+agent-browser snapshot -i
+agent-browser fill @e1 "user@test.com"
+agent-browser fill @e2 "password"
+agent-browser click @e3
+agent-browser wait --url "**/dashboard"
+
+# Capture screenshots
+agent-browser screenshot projects/my-app/references/screenshots/dashboard.png
+```
+
+### Option 2: CLI Pipeline
+
+**Note:** Requires agent-browser to already be available.
 
 ```bash
 # Create a new project
 node .claude/skills/real-prototypes-skill/cli.js new --project my-app
 
-# Full Pipeline (recommended)
+# Full Pipeline
 node .claude/skills/real-prototypes-skill/cli.js pipeline \
   --project my-app \
   --url https://app.example.com \
