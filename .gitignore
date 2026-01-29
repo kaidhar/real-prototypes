@@ -11,7 +11,9 @@ package-lock.json
 yarn.lock
 pnpm-lock.yaml
 .pnpm-store/
-
+REQUIREMENTS.md
+PITCH_DECK.md
+prd.md
 # ============================================
 # Next.js
 # ============================================
@@ -192,6 +194,9 @@ projects/*/prototype/build/
 # Exclude CLI output
 cli-output/
 validation-reports/
+
+# Documentation (generated/private)
+docs/
 
 # ============================================
 # Keep These Files
