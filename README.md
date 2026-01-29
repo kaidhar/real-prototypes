@@ -5,7 +5,7 @@
 A Claude Code skill that helps product managers and developers rapidly prototype new features for existing platforms by capturing visual references and generating production-ready Next.js + Tailwind code.
 
 [![npm version](https://img.shields.io/npm/v/real-prototypes-skill.svg)](https://www.npmjs.com/package/real-prototypes-skill)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Claude Code](https://img.shields.io/badge/Claude-Code-orange)](https://claude.ai/code)
 
 ---
@@ -419,7 +419,7 @@ PORT=3001 npm run dev
 
 ## License
 
-MIT License - See [LICENSE](LICENSE) file for details.
+Apache 2.0 License - See [LICENSE](LICENSE) file for details.
 
 ---
 
