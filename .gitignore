@@ -45,16 +45,9 @@ next-env.d.ts
 # CLAUDE.md
 
 # ============================================
-# Captured Platform Data (Optional)
+# Captured Platform Data
 # ============================================
-# Uncomment these if you don't want to commit captured data:
-# projects/*/references/screenshots/*.png
-# projects/*/references/screenshots/*.jpg
-# projects/*/references/html/*.html
-
-# But DO commit design tokens and manifests:
-!projects/*/references/design-tokens.json
-!projects/*/references/manifest.json
+# All user project data is excluded (see projects/ below)
 
 # ============================================
 # Build & Generated Files
@@ -181,15 +174,20 @@ tsconfig.tsbuildinfo
 # ============================================
 # Project-Specific Exclusions
 # ============================================
-# Exclude large screenshot directories (optional)
-# Uncomment if screenshots are too large for git:
-# projects/*/references/screenshots/
+# User projects directory (contains captured data, prototypes)
+projects/
 
-# Exclude prototype node_modules
-projects/*/prototype/node_modules/
-projects/*/prototype/.next/
-projects/*/prototype/out/
-projects/*/prototype/build/
+# Generated plan files
+**/plan.json
+
+# Temporary notes/task files
+fixes.md
+task.md
+TODO.md
+notes.md
+
+# Temp config files created by CLI
+.temp-config.json
 
 # Exclude CLI output
 cli-output/
@@ -208,10 +206,6 @@ docs/
 !LICENSE
 !SKILL.md
 
-# Keep example reference files
-!examples/*/references/design-tokens.json
-!examples/*/references/manifest.json
-!examples/*/FEATURES.md
 
 # ============================================
 # Claude Code

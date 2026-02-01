@@ -4,6 +4,34 @@ description: Capture an existing web platform's visual design and generate featu
 allowed-tools: Bash(agent-browser:*), Bash(npm:*), Bash(npx:*), Bash(mkdir:*), Bash(node:*)
 ---
 
+## MANDATORY: EXTEND EXISTING PLATFORMS ONLY
+
+**This skill adds features to EXISTING platforms. It does NOT create new designs.**
+
+### Before ANY code generation, these MUST exist:
+- `references/design-tokens.json` - Captured colors from existing platform
+- `references/manifest.json` - Captured pages from existing platform
+- `references/screenshots/` - Visual references from existing platform
+
+### If captures don't exist:
+**STOP** - Do not proceed with code generation
+Run capture on the existing platform first:
+```bash
+node cli.js capture --project <name> --url <PLATFORM_URL>
+```
+NEVER create new designs, colors, or layouts from scratch
+
+### If prototype already exists:
+Use **EXTEND MODE** - Modify existing files only
+NEVER replace or recreate existing pages
+
+### CLI Enforcement:
+- `new` command requires `--force-create` flag (blocks by default)
+- `generate` command runs pre-flight check (blocks if captures missing)
+- `plan` command validates captures exist before generating plan
+
+---
+
 # Platform Prototype Skill
 
 Enterprise-grade tool for capturing web platforms and generating pixel-perfect prototypes.
@@ -104,25 +132,36 @@ node cli.js list
 
 ## Project Structure
 
-All projects are stored in the `projects/` directory:
+All projects are stored in the `projects/` directory at the repository root:
 
 ```
-real-prototypes-skill/
-├── projects/
-│   ├── my-app/
-│   │   ├── project.json      # Project metadata
-│   │   ├── references/       # Captured platform assets
-│   │   │   ├── manifest.json
-│   │   │   ├── design-tokens.json
-│   │   │   ├── screenshots/
-│   │   │   └── html/
-│   │   └── prototype/        # Generated Next.js prototype
-│   │       ├── src/
-│   │       └── package.json
-│   └── another-project/
-│       └── ...
-└── .claude/skills/real-prototypes-skill/
+<repository-root>/
+└── projects/
+    └── <project-name>/
+        ├── project.json          # Project metadata
+        ├── references/           # Captured platform assets (READ from here)
+        │   ├── manifest.json
+        │   ├── design-tokens.json
+        │   ├── screenshots/
+        │   └── html/
+        └── prototype/            # Generated prototype (WRITE here)
+            ├── src/
+            └── package.json
 ```
+
+### CRITICAL: File Output Location
+
+**ALL generated prototype files MUST be created in:**
+```
+projects/<project-name>/prototype/
+```
+
+**Run `generate` command to see the exact absolute path:**
+```bash
+node cli.js generate --project <project-name>
+```
+
+This will output the full path where prototype files should be created.
 
 ---
 
@@ -203,6 +242,17 @@ node cli.js list
 Lists all projects with their status.
 ```
 
+### detect
+```bash
+node cli.js detect --project <name>
+
+Detects existing prototype in project.
+- Identifies framework (Next.js, React, Vue, Angular)
+- Detects styling approach (Tailwind, CSS modules, etc.)
+- Maps captured pages to existing prototype files
+- Recommends EXTEND vs CREATE mode
+```
+
 ### capture
 ```bash
 node cli.js capture --project <name> --url <URL> [options]
@@ -232,6 +282,82 @@ Phases:
   all              Run all validations
 ```
 
+### validate-colors
+```bash
+node cli.js validate-colors --project <name>
+
+Validates all colors in prototype against design-tokens.json.
+- Scans TSX/JSX/CSS files for color values
+- Reports violations with line numbers
+- Suggests closest matching design token colors
+- Flags Tailwind default colors (bg-blue-500, etc.)
+```
+
+### convert
+```bash
+node cli.js convert --project <name> --page <page>
+
+Converts captured HTML to React components.
+- Parses HTML using jsdom
+- Extracts component tree structure
+- Converts to JSX (class→className, for→htmlFor)
+- Preserves exact class names and inline styles
+- Outputs to prototype/src/components/extracted/
+```
+
+### extract-css
+```bash
+node cli.js extract-css --project <name> --page <page>
+
+Extracts and analyzes CSS from captured HTML.
+- Parses <style> tags and inline styles
+- Detects styling paradigm (Tailwind, SLDS, Bootstrap, etc.)
+- Shows most used CSS classes
+- Recommends styling approach for prototype
+```
+
+### extract-lib
+```bash
+node cli.js extract-lib --project <name>
+
+Extracts reusable component library from all captured HTML.
+- Identifies common patterns (buttons, cards, inputs, tables)
+- Detects component variants (primary, secondary, disabled)
+- Generates TypeScript React components
+- Creates component registry (registry.json)
+- Outputs to prototype/src/components/extracted/
+```
+
+### visual-diff
+```bash
+node cli.js visual-diff --project <name> --page <page>
+node cli.js visual-diff --project <name> --list
+
+Compares generated screenshots with reference captures.
+- Pixel-level comparison using pixelmatch
+- Generates diff images highlighting differences
+- Calculates similarity score (target: >95%)
+- Use --list to see available reference screenshots
+```
+
+### plan
+```bash
+node cli.js plan --project <name> --feature "description"
+
+Generates implementation plan with exact details.
+- Analyzes existing prototype structure
+- Specifies EXTEND vs CREATE mode
+- Provides exact file paths for modifications
+- Includes injection points with selectors
+- Lists validation checkpoints
+- Outputs plan.json to project directory
+
+Options:
+  --feature   Description of feature to implement
+  --target    Target page for modification
+  --output    Custom output path for plan.json
+```
+
 ### pipeline
 ```bash
 node cli.js pipeline --project <name> --url <URL> [options]
@@ -245,6 +371,76 @@ node cli.js init [--output <path>]
 
 Creates capture-config.json template
 ```
+
+---
+
+## Extended Workflow (RECOMMENDED)
+
+For best results, follow this extended workflow that addresses common issues:
+
+### Phase 0: Pre-Implementation
+```bash
+# 1. Check for existing prototype FIRST
+node cli.js detect --project my-app
+
+# 2. Generate implementation plan
+node cli.js plan --project my-app --feature "Add health score widget"
+
+# 3. Review plan.json before proceeding
+```
+
+### Phase 1: Analysis
+```bash
+# 4. Extract component library from captured HTML
+node cli.js extract-lib --project my-app
+
+# 5. Analyze CSS patterns
+node cli.js extract-css --project my-app --page homepage
+
+# 6. Convert specific pages to React
+node cli.js convert --project my-app --page account-detail
+```
+
+### Phase 2: Implementation
+- Read the generated plan.json
+- Use EXTEND mode if prototype exists (modify, don't replace)
+- Use ONLY colors from design-tokens.json
+- Match styling approach detected by extract-css
+
+### Phase 3: Validation
+```bash
+# 7. Validate colors
+node cli.js validate-colors --project my-app
+
+# 8. Visual comparison (if screenshots available)
+node cli.js visual-diff --project my-app --page homepage
+
+# 9. Full validation
+node cli.js validate --project my-app --phase post-gen
+```
+
+---
+
+## Critical Rules
+
+### NEVER:
+1. ❌ Create new design systems or color schemes
+2. ❌ Deviate from captured design tokens
+3. ❌ Use colors not in design-tokens.json
+4. ❌ Create new prototype if one exists (use EXTEND mode)
+5. ❌ Replace existing pages - always extend
+6. ❌ Introduce new styling paradigms (don't add styled-components if using CSS modules)
+
+### ALWAYS:
+1. ✅ Run `detect` first to check for existing prototype
+2. ✅ Run `plan` to get implementation guidance
+3. ✅ Parse captured HTML for exact structure
+4. ✅ Validate colors against design-tokens.json
+5. ✅ Use screenshot for visual reference
+6. ✅ Preserve 100% of existing functionality
+7. ✅ Match framework and styling of existing code
+8. ✅ Insert at exact location specified in plan
+9. ✅ Verify visual output matches reference >95%
 
 ---
 

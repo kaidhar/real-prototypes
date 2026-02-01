@@ -14,7 +14,7 @@ const fs = require('fs');
 const path = require('path');
 const os = require('os');
 
-const VERSION = '2.0.0';
+const VERSION = require('../package.json').version;
 const SKILL_NAME = 'real-prototypes-skill';
 
 function log(message, type = 'info') {

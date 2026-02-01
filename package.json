@@ -48,6 +48,9 @@
     "pngjs": "^7.0.0"
   },
   "dependencies": {
+    "@babel/generator": "^7.29.0",
+    "@babel/parser": "^7.29.0",
+    "@babel/traverse": "^7.29.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "jsdom": "^27.4.0",
