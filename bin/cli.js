@@ -215,6 +215,16 @@ function install(options) {
 
   log(`Skill installed to ${targetDir}`, 'success');
 
+  // Copy CLAUDE.md.example to current directory if local install
+  if (!options.global) {
+    const exampleSource = path.join(path.dirname(__dirname), 'CLAUDE.md.example');
+    const exampleTarget = path.join(process.cwd(), 'CLAUDE.md.example');
+    if (fs.existsSync(exampleSource) && !fs.existsSync(exampleTarget)) {
+      fs.copyFileSync(exampleSource, exampleTarget);
+      log('CLAUDE.md.example copied to project root', 'success');
+    }
+  }
+
   // Also copy the agent-browser-skill if it exists and not already present
   const agentBrowserSource = path.join(path.dirname(skillSource), 'agent-browser-skill');
   const agentBrowserTarget = path.join(targetBase, 'agent-browser-skill');
@@ -271,7 +281,8 @@ function install(options) {
   ${targetDir}/QUICKSTART.md
 
 \x1b[1mExample Config:\x1b[0m
-  See .claude/skills/real-prototypes-skill/examples/CLAUDE.md.example for a complete configuration template.
+  See CLAUDE.md.example in the package root for a complete configuration template.
+  Or copy from: ${path.join(path.dirname(__dirname), 'CLAUDE.md.example')}
 
 \x1b[1mNeed Help?\x1b[0m
   https://github.com/kaidhar/real-prototypes-skill

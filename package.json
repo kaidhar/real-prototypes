@@ -30,6 +30,7 @@
     ".claude/skills/real-prototypes-skill/",
     ".claude/skills/agent-browser-skill/",
     ".env.example",
+    "CLAUDE.md.example",
     "README.md",
     "LICENSE"
   ],

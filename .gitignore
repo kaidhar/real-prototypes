@@ -215,3 +215,17 @@ docs/
 .claude/cache/
 .claude/logs/
 .claude/settings.local.json
+
+# ============================================
+# Internal Development Files (do not publish)
+# ============================================
+docs/
+prd.md
+REQUIREMENTS.md
+PITCH_DECK.md
+PUBLISH.md
+INSTALL.md
+**/IMPLEMENTATION-SUMMARY.md
+**/CAPTURE-ENHANCEMENTS.md
+**/accessibility-report.json
+**/accessibility-fixes.md
