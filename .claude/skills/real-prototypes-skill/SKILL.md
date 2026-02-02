@@ -4,6 +4,91 @@ description: Capture an existing web platform's visual design and generate featu
 allowed-tools: Bash(agent-browser:*), Bash(npm:*), Bash(npx:*), Bash(mkdir:*), Bash(node:*)
 ---
 
+## Quick Start (Talk to Claude)
+
+**Just tell Claude what you want:**
+
+> "I want to prototype a chatbot for salesforce.com"
+
+Claude will automatically:
+1. Capture the platform's design
+2. Extract colors, fonts, and components
+3. Generate a Next.js prototype
+4. Start a dev server
+5. Open it in your browser
+
+**Then describe your feature:**
+
+> "Add a chatbot to the bottom-right of the homepage"
+
+Claude adds it and hot-reloads your browser.
+
+**That's it - 2-3 exchanges to see a working prototype.**
+
+---
+
+### Quick Start Commands
+
+```bash
+# One command does everything
+node cli.js quickstart --url https://your-platform.com
+
+# With auto-login (if platform requires authentication)
+node cli.js quickstart --url https://your-platform.com --email user@example.com --password secret
+
+# Start/restart the dev server
+node cli.js serve --project my-app
+
+# Add a feature (conversational)
+node cli.js add-feature --project my-app --page homepage --description "chatbot widget"
+```
+
+---
+
+### If You Need Login Credentials
+
+Add to your project's `CLAUDE.md`:
+
+```yaml
+platform:
+  url: https://your-platform.com
+  email: your@email.com
+  password: your-password
+```
+
+Or just tell Claude: "The email is x@y.com and password is abc"
+
+---
+
+### Auto-Login
+
+If your CLAUDE.md has `email` and `password`, Claude will:
+1. Detect login pages automatically
+2. Fill in credentials
+3. Submit and wait for redirect
+4. Then capture the authenticated pages
+
+No manual login needed!
+
+---
+
+## Enterprise Platforms (Salesforce, SAP, ServiceNow, etc.)
+
+The prototype is a **visual mockup** that:
+- Matches the platform's exact look and feel
+- Uses realistic mock data
+- Shows how your feature would appear
+- Can be demoed to stakeholders
+
+It does NOT require:
+- Platform-specific code (Apex, ABAP, etc.)
+- Real API connections
+- Production credentials
+
+**Perfect for:** Getting stakeholder approval before building the real thing.
+
+---
+
 ## MANDATORY: EXTEND EXISTING PLATFORMS ONLY
 
 **This skill adds features to EXISTING platforms. It does NOT create new designs.**
@@ -29,6 +114,55 @@ NEVER replace or recreate existing pages
 - `new` command requires `--force-create` flag (blocks by default)
 - `generate` command runs pre-flight check (blocks if captures missing)
 - `plan` command validates captures exist before generating plan
+
+---
+
+## ⛔ MANDATORY WORKFLOW - NO SHORTCUTS
+
+**BLOCKING REQUIREMENTS - You will be STOPPED if you skip these:**
+
+### Before Writing ANY Prototype Code:
+
+1. **MUST** run: `node cli.js extract-lib --project <name>`
+   - This parses HTML and creates `registry.json`
+   - Generation is BLOCKED without this file
+
+2. **MUST** run: `node cli.js convert --project <name> --page <page>`
+   - Converts captured HTML to React components
+   - Shows exact DOM structure to replicate
+
+3. **MUST** read the screenshot file using the Read tool
+   - Not glance - actually READ and list every visible element
+   - Use the Read tool on: `projects/<name>/references/screenshots/<page>.png`
+
+4. **MUST** read the captured HTML file
+   - File location: `projects/<name>/references/html/<page>.html`
+
+5. **MUST** create element inventory:
+   - Run: `node cli.js inventory --project <name> --page <page>`
+   - Complete the generated `element-inventory.md`
+
+6. **MUST** complete generation checklist:
+   - Run: `node cli.js checklist --project <name> --page <page>`
+   - All required steps must be marked complete
+
+### ❌ NEVER:
+- Build from memory or general knowledge
+- Skip the `extract-lib` command
+- Skip reading the captured HTML
+- Assume you know what the page looks like
+- Create colors not in `design-tokens.json`
+- Use Tailwind default colors (bg-blue-500, etc.)
+- Replace existing prototype pages
+
+### After Writing Code:
+
+7. **MUST** run: `node cli.js validate-colors --project <name>`
+   - Validates all colors against design tokens
+
+8. **MUST** run: `node cli.js visual-diff --project <name> --page <page>`
+   - BLOCKED if similarity < 90%
+   - Fix and re-run until passing
 
 ---
 
@@ -260,6 +394,50 @@ Runs after prototype generation, blocks if:
 
 ## CLI Commands
 
+### quickstart (RECOMMENDED)
+```bash
+node cli.js quickstart --url <URL> [options]
+
+One command does everything: capture → extract → scaffold → serve → open browser.
+
+Options:
+  --url       Platform URL (required)
+  --email     Login email (optional, for auto-login)
+  --password  Login password (optional, for auto-login)
+  --port      Dev server port (default: 3000)
+  --no-open   Don't auto-open browser
+
+Example:
+  node cli.js quickstart --url https://salesforce.com --email user@test.com --password secret
+```
+
+### serve
+```bash
+node cli.js serve --project <name> [options]
+
+Start dev server and open browser.
+
+Options:
+  --project   Project name (required)
+  --port      Dev server port (default: 3000)
+  --no-open   Don't auto-open browser
+```
+
+### add-feature
+```bash
+node cli.js add-feature --project <name> --page <page> --description <feature>
+
+Conversational feature injection - describes how to add a feature to a page.
+
+Options:
+  --project      Project name (required)
+  --page         Target page name (required)
+  --description  Feature description (required)
+
+Example:
+  node cli.js add-feature --project my-app --page homepage --description "chatbot widget"
+```
+
 ### new
 ```bash
 node cli.js new --project <name>
@@ -390,6 +568,42 @@ Options:
   --output    Custom output path for plan.json
 ```
 
+### checklist (MANDATORY)
+```bash
+node cli.js checklist --project <name> --page <page>
+
+Creates and manages pre-generation checklist.
+- Tracks completion of required steps
+- Auto-detects completed steps based on file existence
+- BLOCKS generation if checklist incomplete
+- Outputs generation-checklist.json
+
+Options:
+  --page      Page name (required)
+  --complete  Mark a step as complete: --complete <step-name>
+  --reset     Mark a step as incomplete: --reset <step-name>
+
+Steps tracked:
+  - extract-lib: Parse captured HTML
+  - convert: Generate React components
+  - read-screenshot: Analyze screenshot
+  - read-html: Read captured HTML
+  - list-all-elements: Create element inventory
+```
+
+### inventory (MANDATORY)
+```bash
+node cli.js inventory --project <name> --page <page>
+
+Creates element inventory template.
+- Generates element-inventory.md
+- Auto-detects elements from HTML if available
+- MUST be completed before code generation
+- Forces listing of ALL visible elements
+
+Output: references/element-inventory.md
+```
+
 ### pipeline
 ```bash
 node cli.js pipeline --project <name> --url <URL> [options]
@@ -406,9 +620,9 @@ Creates capture-config.json template
 
 ---
 
-## Extended Workflow (RECOMMENDED)
+## Extended Workflow (MANDATORY)
 
-For best results, follow this extended workflow that addresses common issues:
+**This workflow MUST be followed. Skipping steps will BLOCK generation.**
 
 ### Phase 0: Pre-Implementation
 ```bash
@@ -421,39 +635,67 @@ node cli.js plan --project my-app --feature "Add health score widget"
 # 3. Review plan.json before proceeding
 ```
 
-### Phase 1: Analysis
+### Phase 1: Analysis (MANDATORY)
 ```bash
-# 4. Extract component library from captured HTML
+# 4. Extract component library from captured HTML (REQUIRED)
 node cli.js extract-lib --project my-app
 
 # 5. Analyze CSS patterns
 node cli.js extract-css --project my-app --page homepage
 
-# 6. Convert specific pages to React
+# 6. Convert specific pages to React (REQUIRED)
 node cli.js convert --project my-app --page account-detail
+
+# 7. Create element inventory (REQUIRED)
+node cli.js inventory --project my-app --page account-detail
+
+# 8. Initialize generation checklist (REQUIRED)
+node cli.js checklist --project my-app --page account-detail
 ```
 
 ### Phase 2: Implementation
-- Read the generated plan.json
-- Use EXTEND mode if prototype exists (modify, don't replace)
-- Use ONLY colors from design-tokens.json
-- Match styling approach detected by extract-css
+**Before writing ANY code:**
+- ✅ Read the screenshot using Read tool
+- ✅ Read the captured HTML using Read tool
+- ✅ Complete element inventory
+- ✅ Mark checklist steps as complete
+- ✅ Read the generated plan.json
+- ✅ Use EXTEND mode if prototype exists (modify, don't replace)
+- ✅ Use ONLY colors from design-tokens.json
+- ✅ Match styling approach detected by extract-css
 
-### Phase 3: Validation
+### Phase 3: Validation (MANDATORY)
 ```bash
-# 7. Validate colors
+# 9. Validate colors
 node cli.js validate-colors --project my-app
 
-# 8. Visual comparison (if screenshots available)
+# 10. Visual comparison (if screenshots available)
 node cli.js visual-diff --project my-app --page homepage
 
-# 9. Full validation
+# 11. Full validation
 node cli.js validate --project my-app --phase post-gen
 ```
 
 ---
 
-## Critical Rules
+## Critical Rules (ENFORCED BY CLI)
+
+### BLOCKING GATES:
+
+| Gate | Blocks If | Command to Fix |
+|------|-----------|----------------|
+| Pre-Generation | `registry.json` missing | `node cli.js extract-lib --project <name>` |
+| Pre-Generation | `design-tokens.json` missing | `node cli.js capture --project <name>` |
+| Pre-Generation | `element-inventory.md` missing | `node cli.js inventory --project <name> --page <page>` |
+| Pre-Generation | Checklist incomplete | `node cli.js checklist --project <name> --page <page>` |
+| Post-Generation | visual-diff similarity < 90% | Fix code, re-run `visual-diff` |
+| Post-Generation | Colors not in design-tokens.json | Fix code, re-run `validate-colors` |
+
+### AUTOMATIC FAILURES:
+- Building from memory = **INVALID**
+- Skipping HTML parsing = **INVALID**
+- Missing elements from inventory = **INVALID**
+- Using Tailwind default colors = **INVALID**
 
 ### NEVER:
 1. ❌ Create new design systems or color schemes
@@ -462,17 +704,64 @@ node cli.js validate --project my-app --phase post-gen
 4. ❌ Create new prototype if one exists (use EXTEND mode)
 5. ❌ Replace existing pages - always extend
 6. ❌ Introduce new styling paradigms (don't add styled-components if using CSS modules)
+7. ❌ Skip the mandatory workflow steps
+8. ❌ Generate code without completing the checklist
 
 ### ALWAYS:
 1. ✅ Run `detect` first to check for existing prototype
-2. ✅ Run `plan` to get implementation guidance
-3. ✅ Parse captured HTML for exact structure
-4. ✅ Validate colors against design-tokens.json
-5. ✅ Use screenshot for visual reference
-6. ✅ Preserve 100% of existing functionality
-7. ✅ Match framework and styling of existing code
-8. ✅ Insert at exact location specified in plan
-9. ✅ Verify visual output matches reference >95%
+2. ✅ Run `extract-lib` to parse captured HTML
+3. ✅ Run `inventory` to create element checklist
+4. ✅ Run `checklist` to track progress
+5. ✅ Run `plan` to get implementation guidance
+6. ✅ Parse captured HTML for exact structure
+7. ✅ Validate colors against design-tokens.json
+8. ✅ Use screenshot for visual reference
+9. ✅ Preserve 100% of existing functionality
+10. ✅ Match framework and styling of existing code
+11. ✅ Insert at exact location specified in plan
+12. ✅ Verify visual output matches reference >95%
+
+---
+
+## REQUIRED: Element Inventory
+
+Before writing code, you MUST create an element inventory by:
+
+1. Reading the screenshot with the Read tool
+2. Listing EVERY visible element in this format:
+
+```markdown
+ELEMENT INVENTORY FOR: <page-name>
+
+HEADER:
+- Logo + text
+- Navigation items (list each)
+- User menu
+
+LEFT COLUMN:
+- Section 1 (collapsible)
+  - Field 1 + edit icon
+  - Field 2 + edit icon
+- Section 2 (collapsible)
+  - Field 3
+  - Field 4
+
+CENTER COLUMN:
+- Filters row (icons + text)
+- Main content area
+- Empty state OR data display
+
+RIGHT COLUMN:
+- Widget 1
+  - Sub-elements
+- Widget 2
+  - Sub-elements
+
+FOOTER:
+- Footer content
+```
+
+**Generation is BLOCKED until this inventory exists and all items are accounted for in the code.**
 
 ---
 
@@ -578,6 +867,46 @@ node .claude/skills/real-prototypes-skill/cli.js validate --project <project> --
 - [ ] Design tokens extracted
 - [ ] List-detail pattern complete
 - [ ] All tabs captured
+
+---
+
+## Cross-Platform Notes
+
+**ALWAYS use the `run_in_background` parameter for long-running processes:**
+
+```bash
+# ✅ CORRECT - works on all platforms
+# Use run_in_background: true in the Bash tool
+npx serve -p 3000
+# with parameter: run_in_background: true
+
+# ✅ CORRECT - Next.js dev server
+npm run dev
+# with parameter: run_in_background: true
+```
+
+### ❌ WRONG - Do NOT use these:
+```bash
+# ❌ WRONG - Linux only, doesn't work on Windows
+npx serve -p 3000 &
+
+# ❌ WRONG - Windows specific and unreliable
+start /b npx serve -p 3000
+
+# ❌ WRONG - PowerShell issues with npx
+PowerShell Start-Process npx serve
+
+# ❌ WRONG - Linux timeout syntax
+timeout 3 && curl localhost:3000
+```
+
+### Platform Detection
+Check the platform from environment info before running OS-specific commands:
+- `win32` = Windows
+- `darwin` = macOS
+- `linux` = Linux
+
+**Rule:** When in doubt, use `run_in_background: true` - it's the tool's built-in cross-platform solution.
 
 ---
 
