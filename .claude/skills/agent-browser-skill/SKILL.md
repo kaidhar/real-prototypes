@@ -2,13 +2,14 @@
 name: agent-browser
 description: Automates browser interactions for web testing, form filling, screenshots, and data extraction. Use when the user needs to navigate websites, interact with web pages, fill forms, take screenshots, test web applications, or extract information from web pages.
 allowed-tools: Bash(agent-browser:*)
+version: 0.9.1
 ---
 
 # Browser Automation with agent-browser
 
 ## Installation
 
-`agent-browser` is a **Vercel Labs npm package** for headless browser automation.
+`agent-browser` is a **Vercel Labs npm package** for headless browser automation. Fast Rust CLI with Node.js fallback.
 
 ```bash
 # Install globally
@@ -44,11 +45,12 @@ agent-browser close             # Close browser
 
 ### Navigation
 ```bash
-agent-browser open <url>      # Navigate to URL
+agent-browser open <url>      # Navigate to URL (aliases: goto, navigate)
 agent-browser back            # Go back
 agent-browser forward         # Go forward
 agent-browser reload          # Reload page
-agent-browser close           # Close browser
+agent-browser connect <port>  # Connect to browser via CDP
+agent-browser close           # Close browser (aliases: quit, exit)
 ```
 
 ### Snapshot (page analysis)
@@ -67,7 +69,7 @@ agent-browser dblclick @e1        # Double-click
 agent-browser focus @e1           # Focus element
 agent-browser fill @e2 "text"     # Clear and type
 agent-browser type @e2 "text"     # Type without clearing
-agent-browser press Enter         # Press key
+agent-browser press Enter         # Press key (alias: key)
 agent-browser press Control+a     # Key combination
 agent-browser keydown Shift       # Hold key down
 agent-browser keyup Shift         # Release key
@@ -76,7 +78,7 @@ agent-browser check @e1           # Check checkbox
 agent-browser uncheck @e1         # Uncheck checkbox
 agent-browser select @e1 "value"  # Select dropdown
 agent-browser scroll down 500     # Scroll page
-agent-browser scrollintoview @e1  # Scroll element into view
+agent-browser scrollintoview @e1  # Scroll element into view (alias: scrollinto)
 agent-browser drag @e1 @e2        # Drag and drop
 agent-browser upload @e1 file.pdf # Upload files
 ```
@@ -199,7 +201,9 @@ agent-browser dialog dismiss        # Dismiss dialog
 
 ### JavaScript
 ```bash
-agent-browser eval "document.title"   # Run JavaScript
+agent-browser eval "document.title"       # Run JavaScript
+agent-browser eval -b "<base64>"          # Base64 encoded script
+agent-browser eval --stdin < script.js    # Piped input
 ```
 
 ## Example: Form submission
@@ -258,7 +262,8 @@ agent-browser errors                                 # View page errors
 agent-browser record start ./debug.webm   # Record from current page
 agent-browser record stop                            # Save recording
 agent-browser open example.com --headed  # Show browser window
-agent-browser --cdp 9222 snapshot        # Connect via CDP
+agent-browser connect 9222               # Connect via CDP (standalone command)
+agent-browser --cdp 9222 snapshot        # Connect via CDP (flag)
 agent-browser console                    # View console messages
 agent-browser console --clear            # Clear console
 agent-browser errors                     # View page errors
@@ -266,4 +271,20 @@ agent-browser errors --clear             # Clear errors
 agent-browser highlight @e1              # Highlight element
 agent-browser trace start                # Start recording trace
 agent-browser trace stop trace.zip       # Stop and save trace
+agent-browser --debug open example.com   # Debug output
+```
+
+## CLI Options
+
+```bash
+--session <name>         # Named session for parallel browsers
+--headers <json>         # Set HTTP headers scoped to URL origin
+--executable-path <path> # Custom browser executable (or AGENT_BROWSER_EXECUTABLE_PATH env)
+--json                   # JSON output for programmatic use
+--full                   # Full page screenshot
+--name, -n <text>        # Locator name filter (for find commands)
+--exact                  # Exact text match
+--headed                 # Show browser window
+--cdp <port>             # Connect via Chrome DevTools Protocol
+--debug                  # Debug output
 ```

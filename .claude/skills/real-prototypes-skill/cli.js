@@ -52,8 +52,253 @@ The following required packages are not installed:
 checkDependencies();
 
 const SKILL_DIR = __dirname;
-const PROJECTS_DIR = path.resolve(SKILL_DIR, '../../../projects');
-const VERSION = '1.5.0';
+const DEFAULT_PROJECTS_DIR = path.resolve(SKILL_DIR, '../../../projects');
+const VERSION = '1.2.0';
+
+/**
+ * Auto-setup: Ensures all prerequisites are installed on first run
+ * Called automatically by commands that require agent-browser
+ */
+function ensurePrerequisites(silent = false) {
+  let needsSetup = false;
+  let agentBrowserInstalled = false;
+  let settingsConfigured = false;
+
+  // Check 1: Is agent-browser installed?
+  try {
+    execSync('agent-browser --version', { encoding: 'utf-8', stdio: 'pipe' });
+    agentBrowserInstalled = true;
+  } catch (e) {
+    needsSetup = true;
+  }
+
+  // Check 2: Is .claude/settings.json configured?
+  let claudeDir = null;
+  let searchDir = process.cwd();
+  for (let i = 0; i < 5; i++) {
+    const candidate = path.join(searchDir, '.claude');
+    if (fs.existsSync(candidate)) {
+      claudeDir = candidate;
+      break;
+    }
+    const parent = path.dirname(searchDir);
+    if (parent === searchDir) break;
+    searchDir = parent;
+  }
+
+  if (claudeDir) {
+    const settingsPath = path.join(claudeDir, 'settings.json');
+    if (fs.existsSync(settingsPath)) {
+      try {
+        const settings = JSON.parse(fs.readFileSync(settingsPath, 'utf-8'));
+        const allow = settings.permissions?.allow || [];
+        // Check for key agent-browser permission
+        settingsConfigured = allow.some(p => p.includes('agent-browser'));
+      } catch (e) {
+        needsSetup = true;
+      }
+    } else {
+      needsSetup = true;
+    }
+  } else {
+    needsSetup = true;
+  }
+
+  // If everything is set up, return early
+  if (agentBrowserInstalled && settingsConfigured) {
+    return true;
+  }
+
+  // Need to run setup
+  if (!silent) {
+    console.log('');
+    console.log('\x1b[33m═══════════════════════════════════════════════════════════\x1b[0m');
+    console.log('\x1b[33m  FIRST-TIME SETUP\x1b[0m');
+    console.log('\x1b[33m═══════════════════════════════════════════════════════════\x1b[0m');
+    console.log('');
+    console.log('  Detected missing prerequisites. Running automatic setup...');
+    console.log('');
+  }
+
+  // Install agent-browser if needed
+  if (!agentBrowserInstalled) {
+    if (!silent) console.log('\x1b[36m→\x1b[0m Installing agent-browser...');
+    try {
+      execSync('npm install -g agent-browser', { stdio: silent ? 'pipe' : 'inherit' });
+      if (!silent) console.log('\x1b[32m✓\x1b[0m agent-browser installed');
+    } catch (e) {
+      console.log('\x1b[31m✗\x1b[0m Failed to install agent-browser');
+      console.log('  Try manually: npm install -g agent-browser');
+      return false;
+    }
+  }
+
+  // Configure settings if needed
+  if (!settingsConfigured) {
+    if (!silent) console.log('\x1b[36m→\x1b[0m Configuring Claude Code settings...');
+
+    // Create .claude directory if needed
+    if (!claudeDir) {
+      claudeDir = path.join(process.cwd(), '.claude');
+      fs.mkdirSync(claudeDir, { recursive: true });
+    }
+
+    // Define permissions
+    const agentBrowserPermissions = [
+      "Bash(agent-browser:*)",
+      "Bash(agent-browser open:*)",
+      "Bash(agent-browser snapshot:*)",
+      "Bash(agent-browser click:*)",
+      "Bash(agent-browser dblclick:*)",
+      "Bash(agent-browser fill:*)",
+      "Bash(agent-browser type:*)",
+      "Bash(agent-browser press:*)",
+      "Bash(agent-browser keydown:*)",
+      "Bash(agent-browser keyup:*)",
+      "Bash(agent-browser hover:*)",
+      "Bash(agent-browser focus:*)",
+      "Bash(agent-browser check:*)",
+      "Bash(agent-browser uncheck:*)",
+      "Bash(agent-browser select:*)",
+      "Bash(agent-browser scroll:*)",
+      "Bash(agent-browser scrollintoview:*)",
+      "Bash(agent-browser drag:*)",
+      "Bash(agent-browser upload:*)",
+      "Bash(agent-browser get:*)",
+      "Bash(agent-browser is:*)",
+      "Bash(agent-browser screenshot:*)",
+      "Bash(agent-browser pdf:*)",
+      "Bash(agent-browser record:*)",
+      "Bash(agent-browser wait:*)",
+      "Bash(agent-browser mouse:*)",
+      "Bash(agent-browser find:*)",
+      "Bash(agent-browser set:*)",
+      "Bash(agent-browser cookies:*)",
+      "Bash(agent-browser storage:*)",
+      "Bash(agent-browser network:*)",
+      "Bash(agent-browser tab:*)",
+      "Bash(agent-browser window:*)",
+      "Bash(agent-browser frame:*)",
+      "Bash(agent-browser dialog:*)",
+      "Bash(agent-browser eval:*)",
+      "Bash(agent-browser back:*)",
+      "Bash(agent-browser forward:*)",
+      "Bash(agent-browser reload:*)",
+      "Bash(agent-browser close:*)",
+      "Bash(agent-browser state:*)",
+      "Bash(agent-browser session:*)",
+      "Bash(agent-browser console:*)",
+      "Bash(agent-browser errors:*)",
+      "Bash(agent-browser highlight:*)",
+      "Bash(agent-browser trace:*)",
+      "Bash(agent-browser install:*)",
+      "Bash(agent-browser --version:*)",
+      "Bash(agent-browser --session:*)",
+      "Bash(agent-browser --cdp:*)",
+      "Bash(agent-browser --headed:*)",
+      "Skill(agent-browser-skill)"
+    ];
+
+    const commonPermissions = [
+      "Bash(npm run:*)",
+      "Bash(npm install:*)",
+      "Bash(npm i:*)",
+      "Bash(npm ci:*)",
+      "Bash(npm test:*)",
+      "Bash(npm exec:*)",
+      "Bash(npm create:*)",
+      "Bash(npx:*)",
+      "Bash(pnpm:*)",
+      "Bash(yarn:*)",
+      "Bash(bun:*)",
+      "Bash(node:*)",
+      "Bash(git:*)",
+      "Bash(ls:*)",
+      "Bash(mkdir:*)",
+      "Bash(cp:*)",
+      "Bash(mv:*)",
+      "Bash(rm:*)",
+      "Bash(cat:*)",
+      "Bash(head:*)",
+      "Bash(tail:*)",
+      "Bash(next:*)",
+      "Bash(playwright:*)",
+      "Bash(npx playwright:*)",
+      "Bash(tsc:*)",
+      "Bash(tsx:*)",
+      "Bash(eslint:*)",
+      "Bash(prettier:*)",
+      "Bash(tailwindcss:*)",
+      "Bash(start:*)",
+      "Bash(open:*)",
+      "Bash(xdg-open:*)",
+      "Bash(npm.cmd:*)"
+    ];
+
+    const allPermissions = [...commonPermissions, ...agentBrowserPermissions];
+
+    // Update settings.json
+    const settingsPath = path.join(claudeDir, 'settings.json');
+    let settings = { permissions: { allow: [], deny: [] } };
+
+    if (fs.existsSync(settingsPath)) {
+      try {
+        settings = JSON.parse(fs.readFileSync(settingsPath, 'utf-8'));
+        if (!settings.permissions) settings.permissions = { allow: [], deny: [] };
+        if (!settings.permissions.allow) settings.permissions.allow = [];
+      } catch (e) {}
+    }
+
+    for (const perm of allPermissions) {
+      if (!settings.permissions.allow.includes(perm)) {
+        settings.permissions.allow.push(perm);
+      }
+    }
+    settings.permissions.allow.sort();
+    fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2));
+
+    // Update settings.local.json
+    const settingsLocalPath = path.join(claudeDir, 'settings.local.json');
+    let settingsLocal = { permissions: { allow: [] } };
+
+    if (fs.existsSync(settingsLocalPath)) {
+      try {
+        settingsLocal = JSON.parse(fs.readFileSync(settingsLocalPath, 'utf-8'));
+        if (!settingsLocal.permissions) settingsLocal.permissions = { allow: [] };
+        if (!settingsLocal.permissions.allow) settingsLocal.permissions.allow = [];
+      } catch (e) {}
+    }
+
+    const localPermissions = ["Skill(agent-browser-skill)", "Skill(real-prototypes-skill)"];
+    for (const perm of localPermissions) {
+      if (!settingsLocal.permissions.allow.includes(perm)) {
+        settingsLocal.permissions.allow.push(perm);
+      }
+    }
+    fs.writeFileSync(settingsLocalPath, JSON.stringify(settingsLocal, null, 2));
+
+    if (!silent) console.log('\x1b[32m✓\x1b[0m Claude Code settings configured');
+  }
+
+  if (!silent) {
+    console.log('');
+    console.log('\x1b[32m✓\x1b[0m Setup complete! Continuing with command...');
+    console.log('');
+  }
+
+  return true;
+}
+
+/**
+ * Get projects directory - uses --path if specified, or current working directory
+ */
+function getProjectsDir(options) {
+  if (options && options.projectPath) {
+    return options.projectPath;
+  }
+  // Default to current working directory, not the skill's hardcoded path
+  return process.cwd();
+}
 
 /**
  * Cross-platform browser opening
@@ -199,15 +444,40 @@ async function waitForServer(url, maxAttempts = 30, intervalMs = 1000) {
   return false;
 }
 
-// Import new modules
-const { detectPrototype, formatResult } = require('./scripts/detect-prototype');
-const { ColorValidator, validateColors } = require('./validation/color-validator');
-const { HTMLToReactConverter, convertHTMLToReact, writeComponents } = require('./scripts/html-to-react');
-const { CSSExtractor, extractCSS } = require('./scripts/extract-css');
-const { VisualDiffComparator } = require('./scripts/visual-diff');
-const { ComponentExtractor, extractComponents } = require('./scripts/extract-components');
-const { PlanGenerator, generatePlan } = require('./scripts/generate-plan');
-const { ProjectStructure } = require('./scripts/project-structure');
+// Lazy-loaded modules (loaded when needed by specific commands)
+// This allows basic commands like 'new', 'list' to work without all deps installed
+
+function getDetectPrototype() {
+  return require('./scripts/detect-prototype');
+}
+
+function getColorValidator() {
+  return require('./validation/color-validator');
+}
+
+function getHTMLToReactConverter() {
+  return require('./scripts/html-to-react');
+}
+
+function getCSSExtractor() {
+  return require('./scripts/extract-css');
+}
+
+function getVisualDiffComparator() {
+  return require('./scripts/visual-diff');
+}
+
+function getComponentExtractor() {
+  return require('./scripts/extract-components');
+}
+
+function getPlanGenerator() {
+  return require('./scripts/generate-plan');
+}
+
+function getProjectStructure() {
+  return require('./scripts/project-structure');
+}
 
 function log(message, type = 'info') {
   const styles = {
@@ -239,6 +509,9 @@ function showHelp() {
 \x1b[1mUSAGE\x1b[0m
   real-prototypes-skill <command> [options]
 
+\x1b[1mSETUP COMMANDS\x1b[0m
+  install          Install agent-browser and configure Claude Code settings
+
 \x1b[1mQUICK START COMMANDS\x1b[0m
   quickstart       One command: capture → extract → scaffold → serve → open browser
   serve            Start dev server and open browser
@@ -264,6 +537,7 @@ function showHelp() {
 
 \x1b[1mPROJECT OPTIONS\x1b[0m
   --project   Project name (required for capture/validate/generate/pipeline)
+  --path      Directory to create/find project in (default: current directory)
 
 \x1b[1mNEW PROJECT OPTIONS\x1b[0m
   --force-create  Required flag to create new project (blocks by default)
@@ -304,6 +578,9 @@ function showHelp() {
   --description  Feature description (required)
 
 \x1b[1mEXAMPLES\x1b[0m
+  # INSTALL: First-time setup (updates Claude Code settings)
+  real-prototypes-skill install
+
   # QUICKSTART: One command does everything
   real-prototypes-skill quickstart --url https://app.example.com
 
@@ -335,6 +612,7 @@ function parseArgs(args) {
   const options = {
     command: args[0],
     project: null,
+    projectPath: null,  // New: custom path for project creation
     url: null,
     email: process.env.PLATFORM_EMAIL,
     password: process.env.PLATFORM_PASSWORD,
@@ -356,6 +634,9 @@ function parseArgs(args) {
     switch (args[i]) {
       case '--project':
         options.project = args[++i];
+        break;
+      case '--path':
+        options.projectPath = args[++i];
         break;
       case '--url':
         options.url = args[++i];
@@ -411,7 +692,8 @@ function parseArgs(args) {
 
   // Set project-based paths if project is specified
   if (options.project) {
-    const projectDir = path.join(PROJECTS_DIR, options.project);
+    const baseDir = options.projectPath || process.cwd();
+    const projectDir = path.join(baseDir, options.project);
     options.refs = options.refs || path.join(projectDir, 'references');
     options.proto = options.proto || path.join(projectDir, 'prototype');
   } else {
@@ -430,8 +712,9 @@ function requireProject(options, command) {
   }
 }
 
-function getProjectDir(projectName) {
-  return path.join(PROJECTS_DIR, projectName);
+function getProjectDir(projectName, options) {
+  const baseDir = getProjectsDir(options);
+  return path.join(baseDir, projectName);
 }
 
 function runNew(options) {
@@ -461,7 +744,7 @@ function runNew(options) {
     process.exit(1);
   }
 
-  const projectDir = getProjectDir(options.project);
+  const projectDir = getProjectDir(options.project, options);
   const refsDir = path.join(projectDir, 'references');
   const protoDir = path.join(projectDir, 'prototype');
 
@@ -482,6 +765,7 @@ function runNew(options) {
   const projectConfig = {
     name: options.project,
     created: new Date().toISOString(),
+    projectPath: projectDir,  // Store where project was created
     platform: {
       name: '',
       baseUrl: ''
@@ -489,38 +773,64 @@ function runNew(options) {
   };
   fs.writeFileSync(path.join(projectDir, 'project.json'), JSON.stringify(projectConfig, null, 2));
 
+  // Copy CLAUDE.md.example template to project
+  const claudeMdExamplePath = path.join(SKILL_DIR, 'examples', 'CLAUDE.md.example');
+  const claudeMdDestPath = path.join(projectDir, 'CLAUDE.md');
+  if (fs.existsSync(claudeMdExamplePath)) {
+    let templateContent = fs.readFileSync(claudeMdExamplePath, 'utf-8');
+    // Customize the template with project name
+    templateContent = templateContent.replace(/my-app/g, options.project);
+    fs.writeFileSync(claudeMdDestPath, templateContent);
+    log('Created CLAUDE.md from template', 'success');
+  } else {
+    log('CLAUDE.md.example not found, skipping template copy', 'warning');
+  }
+
   log(`Project created: ${projectDir}`, 'success');
   console.log(`
 \x1b[1mProject Structure:\x1b[0m
   ${projectDir}/
   ├── project.json      # Project configuration
+  ├── CLAUDE.md         # Platform config template (edit this!)
   ├── references/       # Captured platform assets
   │   ├── screenshots/
   │   └── html/
   └── prototype/        # Generated prototype
 
 \x1b[1mNext Steps:\x1b[0m
-  1. Capture a platform:
+  1. \x1b[33mEdit CLAUDE.md with your platform URL and credentials\x1b[0m
+
+  2. Capture a platform:
      real-prototypes-skill capture --project ${options.project} --url https://your-platform.com
 
-  2. Or run the full pipeline:
+  3. Or run the full pipeline:
      real-prototypes-skill pipeline --project ${options.project} --url https://your-platform.com
   `);
 }
 
-function runList() {
+function runList(options) {
   showBanner();
   log('Projects:', 'title');
 
-  if (!fs.existsSync(PROJECTS_DIR)) {
-    log('No projects found. Create one with: real-prototypes-skill new --project <name>', 'info');
+  // Search in current directory (or specified --path)
+  const searchDir = getProjectsDir(options);
+  log(`Searching in: ${searchDir}`, 'info');
+  console.log('');
+
+  if (!fs.existsSync(searchDir)) {
+    log('Directory not found. Create a project with: real-prototypes-skill new --project <name> --force-create', 'info');
     return;
   }
 
-  const projects = fs.readdirSync(PROJECTS_DIR, { withFileTypes: true })
-    .filter(dirent => dirent.isDirectory())
+  const projects = fs.readdirSync(searchDir, { withFileTypes: true })
+    .filter(dirent => {
+      if (!dirent.isDirectory()) return false;
+      // Check if it looks like a real-prototypes project (has project.json)
+      const configPath = path.join(searchDir, dirent.name, 'project.json');
+      return fs.existsSync(configPath);
+    })
     .map(dirent => {
-      const projectDir = path.join(PROJECTS_DIR, dirent.name);
+      const projectDir = path.join(searchDir, dirent.name);
       const configPath = path.join(projectDir, 'project.json');
       const manifestPath = path.join(projectDir, 'references', 'manifest.json');
 
@@ -562,6 +872,13 @@ function runList() {
 
 async function runCapture(options) {
   requireProject(options, 'capture');
+
+  // Auto-setup prerequisites on first run
+  if (!ensurePrerequisites()) {
+    log('Setup failed. Please run: real-prototypes-skill install', 'error');
+    process.exit(1);
+  }
+
   log(`Starting platform capture for project: ${options.project}`, 'title');
 
   // Build config
@@ -701,7 +1018,7 @@ function runPreflight(options) {
   }
 
   // Check for generation checklist
-  const checklistPath = path.join(getProjectDir(options.project), 'generation-checklist.json');
+  const checklistPath = path.join(getProjectDir(options.project, options), 'generation-checklist.json');
   if (fs.existsSync(checklistPath)) {
     try {
       const checklist = JSON.parse(fs.readFileSync(checklistPath, 'utf-8'));
@@ -764,6 +1081,7 @@ async function runGenerate(options) {
   runPreflight(options);
 
   // Auto-detect existing prototype
+  const { detectPrototype } = getDetectPrototype();
   const protoInfo = detectPrototype(options.proto);
   if (protoInfo.exists) {
     console.log('');
@@ -848,6 +1166,13 @@ ${options.features.length > 0 ? options.features.map(f => `  - ${f}`).join('\n')
 async function runPipeline(options) {
   requireProject(options, 'pipeline');
   showBanner();
+
+  // Auto-setup prerequisites on first run
+  if (!ensurePrerequisites()) {
+    log('Setup failed. Please run: real-prototypes-skill install', 'error');
+    process.exit(1);
+  }
+
   log(`Running full pipeline for project: ${options.project}`, 'title');
 
   console.log(`
@@ -922,6 +1247,7 @@ function runValidateColors(options) {
   }
 
   try {
+    const { validateColors } = getColorValidator();
     const validator = validateColors(options.proto, tokensPath);
     console.log('');
     console.log(validator.formatViolations());
@@ -968,6 +1294,7 @@ function runConvert(options, args) {
   }
 
   try {
+    const { convertHTMLToReact, writeComponents } = getHTMLToReactConverter();
     const result = convertHTMLToReact(htmlPath);
 
     console.log(`\n\x1b[1mDetected Components (${result.boundaries.length}):\x1b[0m`);
@@ -1017,6 +1344,7 @@ function runExtractCSS(options, args) {
   }
 
   try {
+    const { CSSExtractor } = getCSSExtractor();
     const extractor = new CSSExtractor();
     extractor.loadFromFile(htmlPath);
 
@@ -1104,6 +1432,7 @@ function runVisualDiff(options, args) {
   // Run comparison
   (async () => {
     try {
+      const { VisualDiffComparator } = getVisualDiffComparator();
       const comparator = new VisualDiffComparator({ minSimilarity: 95 });
       const diffPath = path.join(options.refs, 'diff', `${pageName}-diff.png`);
 
@@ -1124,7 +1453,7 @@ function runDetect(options) {
   showBanner();
   log(`Detecting existing prototype for project: ${options.project}`, 'title');
 
-  const projectDir = getProjectDir(options.project);
+  const projectDir = getProjectDir(options.project, options);
   const protoDir = path.join(projectDir, 'prototype');
   const manifestPath = path.join(projectDir, 'references', 'manifest.json');
 
@@ -1141,13 +1470,13 @@ function runDetect(options) {
   }
 
   // Run detection
+  const { detectPrototype, formatResult, mapPages } = getDetectPrototype();
   const result = detectPrototype(protoDir);
 
   // Try to map pages if manifest exists
   if (fs.existsSync(manifestPath)) {
     try {
       const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'));
-      const { mapPages } = require('./scripts/detect-prototype');
       result.mappedPages = mapPages(protoDir, manifest);
     } catch (e) {
       log(`Could not load manifest: ${e.message}`, 'warning');
@@ -1191,6 +1520,7 @@ function runExtractLib(options) {
   }
 
   try {
+    const { ComponentExtractor } = getComponentExtractor();
     const extractor = new ComponentExtractor();
     extractor.analyzeDirectory(htmlDir);
 
@@ -1230,9 +1560,10 @@ function runPlan(options, args) {
 
   log(`Generating implementation plan for project: ${options.project}`, 'title');
 
-  const projectDir = getProjectDir(options.project);
+  const projectDir = getProjectDir(options.project, options);
 
   try {
+    const { PlanGenerator } = getPlanGenerator();
     const generator = new PlanGenerator(projectDir, {
       featureDescription: feature,
       targetPage
@@ -1290,7 +1621,7 @@ function runChecklist(options, args) {
 
   log(`Generation checklist for: ${pageName}`, 'title');
 
-  const projectDir = getProjectDir(options.project);
+  const projectDir = getProjectDir(options.project, options);
   const checklistPath = path.join(projectDir, 'generation-checklist.json');
 
   // Default checklist structure
@@ -1596,6 +1927,12 @@ ${detectedElements.length > 0 ? detectedElements.map(e => `- ${e.category}: ${e.
 async function runQuickstart(options) {
   showBanner();
 
+  // Auto-setup prerequisites on first run
+  if (!ensurePrerequisites()) {
+    log('Setup failed. Please run: real-prototypes-skill install', 'error');
+    process.exit(1);
+  }
+
   if (!options.url) {
     log('--url is required for quickstart', 'error');
     log('Example: node cli.js quickstart --url https://app.example.com', 'info');
@@ -1603,7 +1940,7 @@ async function runQuickstart(options) {
   }
 
   const projectName = options.project || getHostnameFromUrl(options.url);
-  const projectDir = getProjectDir(projectName);
+  const projectDir = getProjectDir(projectName, options);
   const protoDir = path.join(projectDir, 'prototype');
   const port = options.port || 3000;
   const serverUrl = `http://localhost:${port}`;
@@ -1874,7 +2211,7 @@ async function runServe(options) {
   requireProject(options, 'serve');
   showBanner();
 
-  const projectDir = getProjectDir(options.project);
+  const projectDir = getProjectDir(options.project, options);
   const protoDir = path.join(projectDir, 'prototype');
   const packageJsonPath = path.join(protoDir, 'package.json');
   const port = options.port || 3000;
@@ -1961,7 +2298,7 @@ function runAddFeature(options) {
     process.exit(1);
   }
 
-  const projectDir = getProjectDir(options.project);
+  const projectDir = getProjectDir(options.project, options);
   const protoDir = path.join(projectDir, 'prototype');
   const refsDir = path.join(projectDir, 'references');
 
@@ -2053,6 +2390,243 @@ function runAddFeature(options) {
   log(`Feature plan saved to: ${planPath}`, 'success');
 }
 
+/**
+ * INSTALL: Install agent-browser and configure Claude Code settings
+ * Updates .claude/settings.json and .claude/settings.local.json
+ */
+function runInstall(options) {
+  showBanner();
+  log('Installing real-prototypes-skill dependencies...', 'title');
+
+  // Step 1: Check/install agent-browser
+  log('Step 1: Checking agent-browser...', 'info');
+  try {
+    const version = execSync('agent-browser --version', { encoding: 'utf-8' }).trim();
+    log(`agent-browser ${version} is installed`, 'success');
+  } catch (e) {
+    log('agent-browser not found, installing...', 'info');
+    try {
+      execSync('npm install -g agent-browser', { stdio: 'inherit' });
+      log('agent-browser installed', 'success');
+    } catch (installErr) {
+      log('Failed to install agent-browser. Try: npm install -g agent-browser', 'error');
+      process.exit(1);
+    }
+  }
+
+  // Step 2: Find .claude directory
+  log('Step 2: Configuring Claude Code settings...', 'info');
+
+  // Look for .claude directory (check current dir, parent dirs, or create)
+  let claudeDir = null;
+  let searchDir = process.cwd();
+
+  // Search up to 5 levels up for .claude directory
+  for (let i = 0; i < 5; i++) {
+    const candidate = path.join(searchDir, '.claude');
+    if (fs.existsSync(candidate)) {
+      claudeDir = candidate;
+      break;
+    }
+    const parent = path.dirname(searchDir);
+    if (parent === searchDir) break; // Reached root
+    searchDir = parent;
+  }
+
+  // If not found, create in current directory
+  if (!claudeDir) {
+    claudeDir = path.join(process.cwd(), '.claude');
+    fs.mkdirSync(claudeDir, { recursive: true });
+    log(`Created .claude directory at: ${claudeDir}`, 'info');
+  } else {
+    log(`Found .claude directory at: ${claudeDir}`, 'info');
+  }
+
+  // Define agent-browser permissions to add
+  const agentBrowserPermissions = [
+    "Bash(agent-browser:*)",
+    "Bash(agent-browser open:*)",
+    "Bash(agent-browser snapshot:*)",
+    "Bash(agent-browser click:*)",
+    "Bash(agent-browser dblclick:*)",
+    "Bash(agent-browser fill:*)",
+    "Bash(agent-browser type:*)",
+    "Bash(agent-browser press:*)",
+    "Bash(agent-browser keydown:*)",
+    "Bash(agent-browser keyup:*)",
+    "Bash(agent-browser hover:*)",
+    "Bash(agent-browser focus:*)",
+    "Bash(agent-browser check:*)",
+    "Bash(agent-browser uncheck:*)",
+    "Bash(agent-browser select:*)",
+    "Bash(agent-browser scroll:*)",
+    "Bash(agent-browser scrollintoview:*)",
+    "Bash(agent-browser drag:*)",
+    "Bash(agent-browser upload:*)",
+    "Bash(agent-browser get:*)",
+    "Bash(agent-browser is:*)",
+    "Bash(agent-browser screenshot:*)",
+    "Bash(agent-browser pdf:*)",
+    "Bash(agent-browser record:*)",
+    "Bash(agent-browser wait:*)",
+    "Bash(agent-browser mouse:*)",
+    "Bash(agent-browser find:*)",
+    "Bash(agent-browser set:*)",
+    "Bash(agent-browser cookies:*)",
+    "Bash(agent-browser storage:*)",
+    "Bash(agent-browser network:*)",
+    "Bash(agent-browser tab:*)",
+    "Bash(agent-browser window:*)",
+    "Bash(agent-browser frame:*)",
+    "Bash(agent-browser dialog:*)",
+    "Bash(agent-browser eval:*)",
+    "Bash(agent-browser back:*)",
+    "Bash(agent-browser forward:*)",
+    "Bash(agent-browser reload:*)",
+    "Bash(agent-browser close:*)",
+    "Bash(agent-browser state:*)",
+    "Bash(agent-browser session:*)",
+    "Bash(agent-browser console:*)",
+    "Bash(agent-browser errors:*)",
+    "Bash(agent-browser highlight:*)",
+    "Bash(agent-browser trace:*)",
+    "Bash(agent-browser install:*)",
+    "Bash(agent-browser --version:*)",
+    "Bash(agent-browser --session:*)",
+    "Bash(agent-browser --cdp:*)",
+    "Bash(agent-browser --headed:*)",
+    "Skill(agent-browser-skill)"
+  ];
+
+  // Common dev permissions
+  const commonPermissions = [
+    "Bash(npm run:*)",
+    "Bash(npm install:*)",
+    "Bash(npm i:*)",
+    "Bash(npm ci:*)",
+    "Bash(npm test:*)",
+    "Bash(npm exec:*)",
+    "Bash(npm create:*)",
+    "Bash(npx:*)",
+    "Bash(pnpm:*)",
+    "Bash(yarn:*)",
+    "Bash(bun:*)",
+    "Bash(node:*)",
+    "Bash(git:*)",
+    "Bash(ls:*)",
+    "Bash(mkdir:*)",
+    "Bash(cp:*)",
+    "Bash(mv:*)",
+    "Bash(rm:*)",
+    "Bash(cat:*)",
+    "Bash(head:*)",
+    "Bash(tail:*)",
+    "Bash(next:*)",
+    "Bash(playwright:*)",
+    "Bash(npx playwright:*)",
+    "Bash(tsc:*)",
+    "Bash(tsx:*)",
+    "Bash(eslint:*)",
+    "Bash(prettier:*)",
+    "Bash(tailwindcss:*)",
+    "Bash(start:*)",
+    "Bash(open:*)",
+    "Bash(xdg-open:*)",
+    "Bash(npm.cmd:*)"
+  ];
+
+  const allPermissions = [...commonPermissions, ...agentBrowserPermissions];
+
+  // Update settings.json
+  const settingsPath = path.join(claudeDir, 'settings.json');
+  let settings = { permissions: { allow: [], deny: [] } };
+
+  if (fs.existsSync(settingsPath)) {
+    try {
+      settings = JSON.parse(fs.readFileSync(settingsPath, 'utf-8'));
+      if (!settings.permissions) {
+        settings.permissions = { allow: [], deny: [] };
+      }
+      if (!settings.permissions.allow) {
+        settings.permissions.allow = [];
+      }
+    } catch (e) {
+      log(`Could not parse existing settings.json, creating new`, 'warning');
+    }
+  }
+
+  // Add permissions that don't exist
+  let addedCount = 0;
+  for (const perm of allPermissions) {
+    if (!settings.permissions.allow.includes(perm)) {
+      settings.permissions.allow.push(perm);
+      addedCount++;
+    }
+  }
+
+  // Sort permissions for consistency
+  settings.permissions.allow.sort();
+
+  fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2));
+  log(`Updated settings.json (${addedCount} new permissions added)`, 'success');
+
+  // Update settings.local.json (add skill permission if not present)
+  const settingsLocalPath = path.join(claudeDir, 'settings.local.json');
+  let settingsLocal = { permissions: { allow: [] } };
+
+  if (fs.existsSync(settingsLocalPath)) {
+    try {
+      settingsLocal = JSON.parse(fs.readFileSync(settingsLocalPath, 'utf-8'));
+      if (!settingsLocal.permissions) {
+        settingsLocal.permissions = { allow: [] };
+      }
+      if (!settingsLocal.permissions.allow) {
+        settingsLocal.permissions.allow = [];
+      }
+    } catch (e) {
+      log(`Could not parse existing settings.local.json, creating new`, 'warning');
+    }
+  }
+
+  // Add skill permissions to local settings
+  const localPermissions = [
+    "Skill(agent-browser-skill)",
+    "Skill(real-prototypes-skill)"
+  ];
+
+  let localAddedCount = 0;
+  for (const perm of localPermissions) {
+    if (!settingsLocal.permissions.allow.includes(perm)) {
+      settingsLocal.permissions.allow.push(perm);
+      localAddedCount++;
+    }
+  }
+
+  fs.writeFileSync(settingsLocalPath, JSON.stringify(settingsLocal, null, 2));
+  log(`Updated settings.local.json (${localAddedCount} new permissions added)`, 'success');
+
+  console.log(`
+\x1b[1m═══════════════════════════════════════════════════════════\x1b[0m
+\x1b[1m                 INSTALLATION COMPLETE                      \x1b[0m
+\x1b[1m═══════════════════════════════════════════════════════════\x1b[0m
+
+\x1b[32m✓\x1b[0m agent-browser installed and configured
+\x1b[32m✓\x1b[0m Claude Code settings updated
+
+\x1b[1mFiles updated:\x1b[0m
+  ${settingsPath}
+  ${settingsLocalPath}
+
+\x1b[1mNext steps:\x1b[0m
+  1. Restart Claude Code (or run /clear) to reload settings
+  2. Run: real-prototypes-skill quickstart --url https://your-platform.com
+
+\x1b[1mOr create a new project manually:\x1b[0m
+  real-prototypes-skill new --project my-app --force-create
+  real-prototypes-skill capture --project my-app --url https://your-platform.com
+  `);
+}
+
 function runInit(options) {
   showBanner();
   log('Initializing capture configuration...', 'title');
@@ -2123,6 +2697,9 @@ const args = process.argv.slice(2);
 const options = parseArgs(args);
 
 switch (options.command) {
+  case 'install':
+    runInstall(options);
+    break;
   case 'quickstart':
     runQuickstart(options);
     break;
@@ -2139,7 +2716,7 @@ switch (options.command) {
     runDetect(options);
     break;
   case 'list':
-    runList();
+    runList(options);
     break;
   case 'capture':
     runCapture(options);

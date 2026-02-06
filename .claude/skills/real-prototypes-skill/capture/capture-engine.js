@@ -106,13 +106,14 @@ class CaptureEngine {
       'auth.credentials': ['email', 'password', 'emailField', 'emailSelector', 'passwordField', 'passwordSelector', 'submitButton', 'submitSelector'],
       capture: ['mode', 'maxPages', 'maxDepth', 'viewports', 'interactions', 'include', 'manualPages', 'exclude', 'waitAfterLoad', 'waitAfterInteraction'],
       output: ['directory', 'screenshots', 'html', 'designTokens'],
-      validation: ['minPages', 'minColors', 'requireDetailPages', 'requireAllTabs']
+      validation: ['minPages', 'minColors', 'requireDetailPages', 'requireAllTabs'],
+      debug: ['recordSession', 'verbose']
     };
 
     const warnings = [];
 
     // Check top-level unknown fields
-    const topLevelKnown = ['platform', 'auth', 'capture', 'output', 'validation'];
+    const topLevelKnown = ['platform', 'auth', 'capture', 'output', 'validation', 'debug'];
     Object.keys(config).forEach(key => {
       if (!topLevelKnown.includes(key)) {
         warnings.push(`Unknown config field: '${key}' - this will be ignored`);
@@ -215,6 +216,43 @@ class CaptureEngine {
     return this.exec(`agent-browser ${action}`);
   }
 
+  /**
+   * Get the path for auth state file
+   */
+  getStateFilePath() {
+    const outputDir = this.config.output?.directory || './references';
+    return path.join(outputDir, 'auth-state.json');
+  }
+
+  /**
+   * Try to load saved auth state to skip re-authentication
+   * @returns {boolean} true if state was loaded successfully
+   */
+  tryLoadAuthState() {
+    const stateFile = this.getStateFilePath();
+    if (fs.existsSync(stateFile)) {
+      this.log('Loading saved auth state...', 'step');
+      const result = this.browser(`state load "${stateFile}"`);
+      if (result.success) {
+        this.log('Auth state loaded successfully', 'success');
+        return true;
+      }
+      this.log('Failed to load auth state, will re-authenticate', 'warning');
+    }
+    return false;
+  }
+
+  /**
+   * Save auth state after successful login
+   */
+  saveAuthState() {
+    const stateFile = this.getStateFilePath();
+    const result = this.browser(`state save "${stateFile}"`);
+    if (result.success) {
+      this.log('Auth state saved for future runs', 'step');
+    }
+  }
+
   async run() {
     this.log('Starting Platform Capture Engine', 'info');
     this.log(`Platform: ${this.config.platform.name}`, 'step');
@@ -224,9 +262,32 @@ class CaptureEngine {
       // Phase 1: Setup
       await this.setup();
 
+      // Start debug recording if enabled
+      if (this.config.debug?.recordSession) {
+        const outputDir = this.config.output?.directory || './references';
+        const recordPath = path.join(outputDir, 'capture-debug.webm');
+        this.browser(`record start "${recordPath}"`);
+        this.log('Debug recording started', 'step');
+      }
+
       // Phase 2: Authentication
       if (this.config.auth.type !== 'none') {
-        await this.authenticate();
+        // Try to load saved auth state first
+        const stateLoaded = this.tryLoadAuthState();
+        if (stateLoaded) {
+          // Verify state is still valid by navigating to a protected page
+          this.browser(`open ${this.config.platform.baseUrl}`);
+          this.browser('wait --load networkidle');
+          const currentUrl = this.browser('get url').output;
+          if (currentUrl && currentUrl.includes('login')) {
+            this.log('Saved auth state expired, re-authenticating...', 'warning');
+            await this.authenticate();
+          } else {
+            this.log('Using saved auth state', 'success');
+          }
+        } else {
+          await this.authenticate();
+        }
       }
 
       // Phase 3: Discovery
@@ -252,9 +313,36 @@ class CaptureEngine {
     } catch (error) {
       this.log(`Fatal error: ${error.message}`, 'error');
       this.errors.push({ phase: 'execution', error: error.message });
+      // Capture browser errors for debugging
+      this.captureDebugInfo();
       return { success: false, error: error.message };
     } finally {
+      // Stop debug recording if enabled
+      if (this.config.debug?.recordSession) {
+        this.browser('record stop');
+        this.log('Debug recording saved', 'step');
+      }
       this.browser('close');
+    }
+  }
+
+  /**
+   * Capture browser console logs and errors for debugging
+   */
+  captureDebugInfo() {
+    try {
+      const consoleOutput = this.browser('console').output;
+      if (consoleOutput) {
+        this.log('Browser console:', 'step');
+        console.log(consoleOutput.substring(0, 500));
+      }
+      const pageErrors = this.browser('errors').output;
+      if (pageErrors) {
+        this.log('Page errors:', 'error');
+        console.log(pageErrors.substring(0, 500));
+      }
+    } catch (e) {
+      // Ignore errors when capturing debug info
     }
   }
 
@@ -289,7 +377,8 @@ class CaptureEngine {
 
     this.showSpinner('Navigating to login page');
     this.browser(`open ${loginUrl}`);
-    this.browser(`wait 2000`);
+    // Use smart wait for page load instead of fixed delay
+    this.browser('wait --load networkidle');
     this.hideSpinner('Loaded login page', true);
 
     if (auth.type === 'form') {
@@ -325,32 +414,76 @@ class CaptureEngine {
         );
       }
 
-      // Fill email field (prefer ref, fallback to selector)
+      // Fill email field (prefer ref, fallback to selector, then semantic locators)
+      let emailFilled = false;
       if (formElements.emailRef) {
-        this.browser(`fill ${formElements.emailRef} "${email}"`);
-      } else if (formElements.emailSelector) {
-        this.browser(`fill "${formElements.emailSelector}" "${email}"`);
+        const result = this.browser(`fill ${formElements.emailRef} "${email}"`);
+        emailFilled = result.success;
+      }
+      if (!emailFilled && formElements.emailSelector) {
+        const result = this.browser(`fill "${formElements.emailSelector}" "${email}"`);
+        emailFilled = result.success;
+      }
+      // Fallback to semantic locators if ref/selector failed
+      if (!emailFilled) {
+        this.log('Trying semantic locators for email field...', 'step');
+        const semanticLabels = ['Email', 'Username', 'User name', 'Email address', 'Login'];
+        for (const label of semanticLabels) {
+          const result = this.browser(`find label "${label}" fill "${email}"`);
+          if (result.success) {
+            emailFilled = true;
+            break;
+          }
+        }
       }
 
       // Fill password field
+      let passwordFilled = false;
       if (formElements.passwordRef) {
-        this.browser(`fill ${formElements.passwordRef} "${password}"`);
-      } else if (formElements.passwordSelector) {
-        this.browser(`fill "${formElements.passwordSelector}" "${password}"`);
+        const result = this.browser(`fill ${formElements.passwordRef} "${password}"`);
+        passwordFilled = result.success;
+      }
+      if (!passwordFilled && formElements.passwordSelector) {
+        const result = this.browser(`fill "${formElements.passwordSelector}" "${password}"`);
+        passwordFilled = result.success;
+      }
+      // Fallback to semantic locators if ref/selector failed
+      if (!passwordFilled) {
+        this.log('Trying semantic locators for password field...', 'step');
+        const result = this.browser(`find label "Password" fill "${password}"`);
+        passwordFilled = result.success;
       }
 
-      // Click submit button
+      // Click submit button (prefer ref, fallback to selector, then semantic locators)
       this.showSpinner('Logging in');
+      let submitClicked = false;
       if (formElements.submitRef) {
-        this.browser(`click ${formElements.submitRef}`);
-      } else if (formElements.submitSelector) {
-        this.browser(`click "${formElements.submitSelector}"`);
-      } else {
-        // Fallback: try pressing Enter
-        this.browser('press Enter');
+        const result = this.browser(`click ${formElements.submitRef}`);
+        submitClicked = result.success;
+      }
+      if (!submitClicked && formElements.submitSelector) {
+        const result = this.browser(`click "${formElements.submitSelector}"`);
+        submitClicked = result.success;
+      }
+      // Fallback to semantic locators for submit button
+      if (!submitClicked) {
+        this.log('Trying semantic locators for submit button...', 'step');
+        const submitLabels = ['Sign in', 'Log in', 'Login', 'Submit', 'Continue', 'Next'];
+        for (const label of submitLabels) {
+          const result = this.browser(`find text "${label}" click`);
+          if (result.success) {
+            submitClicked = true;
+            break;
+          }
+        }
+        // Last resort: press Enter
+        if (!submitClicked) {
+          this.browser('press Enter');
+        }
       }
 
-      this.browser(`wait 3000`);
+      // Use smart wait for navigation after login instead of fixed delay
+      this.browser('wait --load networkidle');
       this.hideSpinner('Login submitted', true);
 
       // Verify login success
@@ -360,6 +493,10 @@ class CaptureEngine {
         const pageSnapshot = this.browser('snapshot -i').output || '';
         const errorText = this.extractErrorMessages(pageSnapshot);
 
+        // Capture console/errors for debugging
+        const consoleLog = this.browser('console').output || '';
+        const pageErrors = this.browser('errors').output || '';
+
         throw new Error(
           'Authentication failed - still on login page.\n\n' +
           'Possible causes:\n' +
@@ -367,12 +504,15 @@ class CaptureEngine {
           '2. CAPTCHA or 2FA required\n' +
           '3. Account locked or needs verification\n' +
           (errorText ? '\nPage errors found: ' + errorText + '\n' : '') +
+          (pageErrors ? '\nBrowser errors: ' + pageErrors.substring(0, 200) + '\n' : '') +
           '\nCurrent URL: ' + currentUrl + '\n' +
           '\nTry running with --headed to see the browser window.'
         );
       }
     }
 
+    // Save auth state for future runs
+    this.saveAuthState();
     this.log('Authentication successful', 'success');
   }
 
@@ -522,7 +662,12 @@ class CaptureEngine {
 
     // Navigate to page
     this.browser(`open ${url}`);
-    this.browser(`wait ${this.config.capture?.waitAfterLoad || 2000}`);
+    // Use smart wait for page load, with fallback to config value
+    const waitResult = this.browser('wait --load networkidle');
+    if (!waitResult.success) {
+      // Fallback to fixed wait if smart wait fails
+      this.browser(`wait ${this.config.capture?.waitAfterLoad || 2000}`);
+    }
 
     // Get all links on the page
     const snapshot = this.browser('snapshot').output;
@@ -606,7 +751,11 @@ class CaptureEngine {
 
   async capturePage(url, outputDir, viewports) {
     this.browser(`open ${url}`);
-    this.browser(`wait ${this.config.capture?.waitAfterLoad || 2000}`);
+    // Use smart wait for page load, with fallback to config value
+    const waitResult = this.browser('wait --load networkidle');
+    if (!waitResult.success) {
+      this.browser(`wait ${this.config.capture?.waitAfterLoad || 2000}`);
+    }
 
     const pageName = this.urlToPageName(url);
     const pageData = {
@@ -1098,7 +1247,8 @@ function parseArgs() {
     auth: { type: 'form', credentials: {} },
     capture: {},
     output: {},
-    validation: {}
+    validation: {},
+    debug: {}
   };
 
   for (let i = 0; i < args.length; i++) {
@@ -1106,6 +1256,11 @@ function parseArgs() {
       case '--config':
         const configFile = args[++i];
         const fileConfig = JSON.parse(fs.readFileSync(configFile, 'utf-8'));
+        // Allow CLI flags to override config file
+        if (args.includes('--debug')) {
+          fileConfig.debug = fileConfig.debug || {};
+          fileConfig.debug.recordSession = true;
+        }
         return fileConfig;
       case '--url':
         config.platform.baseUrl = args[++i];
@@ -1119,6 +1274,9 @@ function parseArgs() {
         break;
       case '--output':
         config.output.directory = args[++i];
+        break;
+      case '--debug':
+        config.debug.recordSession = true;
         break;
       case '--help':
         console.log(`
@@ -1134,6 +1292,7 @@ Options:
   --email      Login email
   --password   Login password
   --output     Output directory (default: ./references)
+  --debug      Enable debug recording (saves capture-debug.webm)
   --help       Show this help
         `);
         process.exit(0);

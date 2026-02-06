@@ -1,0 +1,41 @@
+{
+  "platform": {
+    "name": "test.com",
+    "baseUrl": "https://test.com",
+    "capturedAt": "2026-02-06T03:53:29.156Z"
+  },
+  "pages": [
+    {
+      "name": "https-abm-sprouts-ai-account-details-bacardilimite",
+      "url": "https://abm.sprouts.ai/account-details/bacardilimited.com/overview",
+      "screenshot": "screenshots/https-abm-sprouts-ai-account-details-bacardilimite-desktop.png",
+      "description": "https-abm-sprouts-ai-accounts-bacardilimite detail page",
+      "captures": [
+        {
+          "viewport": "desktop",
+          "screenshot": "screenshots/https-abm-sprouts-ai-account-details-bacardilimite-desktop.png"
+        }
+      ],
+      "tabs": [
+        {
+          "name": "Overview",
+          "screenshot": "screenshots/https-abm-sprouts-ai-account-details-bacardilimite-tab-overview.png"
+        },
+        {
+          "name": "Activity",
+          "screenshot": "screenshots/https-abm-sprouts-ai-account-details-bacardilimite-tab-activity.png"
+        }
+      ],
+      "interactions": []
+    }
+  ],
+  "stats": {
+    "pagesDiscovered": 1,
+    "pagesCaptured": 1,
+    "screenshotsTaken": 3,
+    "htmlCaptured": 0,
+    "interactionsPerformed": 2,
+    "errorsEncountered": 0
+  },
+  "designTokens": "design-tokens.json"
+}

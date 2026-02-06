@@ -174,12 +174,34 @@ Enterprise-grade tool for capturing web platforms and generating pixel-perfect p
 
 ## Prerequisites
 
+### Automatic Setup (Recommended)
+Prerequisites are installed **automatically** the first time you run any capture command (`quickstart`, `capture`, or `pipeline`). The skill will:
+1. Install `agent-browser` globally if not present
+2. Configure `.claude/settings.json` with required permissions
+3. Configure `.claude/settings.local.json` with skill permissions
+
+**No manual setup required!** Just run:
+```bash
+node cli.js quickstart --url https://your-platform.com
+```
+
+### Manual Installation (Optional)
+If you prefer to set up manually, run:
+```bash
+node cli.js install
+```
+
+This will:
+- Install `agent-browser` globally
+- Update `.claude/settings.json` with all agent-browser permissions
+- Update `.claude/settings.local.json` with skill permissions
+
 ### Required: agent-browser
-This skill requires **agent-browser** for browser automation.
+This skill requires **agent-browser** (v0.9.1+) for browser automation.
 
 `agent-browser` is a **Vercel Labs npm package** for headless browser automation.
 
-**Installation:**
+**Manual Installation (if auto-setup fails):**
 ```bash
 # Install globally
 npm install -g agent-browser
@@ -190,10 +212,8 @@ agent-browser install
 
 **Verify installation:**
 ```bash
-agent-browser --version
+agent-browser --version  # Should show 0.9.1 or higher
 ```
-
-**Note:** The `npx real-prototypes-skill` installer will attempt to install agent-browser automatically.
 
 ### Alternative: Manual Capture
 If you can't install `agent-browser`, you can still use this skill by:

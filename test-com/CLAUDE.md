@@ -1,0 +1,93 @@
+# Real Prototypes - Example CLAUDE.md Configuration
+
+Copy this to your project's CLAUDE.md and fill in your platform details.
+
+---
+
+## ⚠️ IMPORTANT: This Skill Extends EXISTING Platforms
+
+This skill is for **adding features to existing platforms**, NOT creating new designs.
+
+**Before generating any code:**
+1. You MUST have an existing platform to capture
+2. Run `capture` to get screenshots, HTML, and design tokens
+3. Only then can you generate prototype code
+
+**The CLI will BLOCK you if:**
+- You try to create a new project without `--force-create`
+- You try to generate code without captures
+- You try to generate a plan without captures
+
+---
+
+## Platform Credentials
+
+```
+# Your platform's base URL (no trailing slash)
+PLATFORM_URL=https://app.example.com
+
+# Login credentials (if the platform requires authentication)
+PLATFORM_EMAIL=your-email@example.com
+PLATFORM_PASSWORD=your-secure-password
+```
+
+## Capture Settings
+
+```
+# Pages to capture
+# Option 1: Specify pages manually (comma-separated paths)
+PAGES_TO_CAPTURE=/dashboard,/settings,/profile,/users
+
+# Option 2: Auto-discover all pages
+# PAGES_TO_CAPTURE=auto
+
+# Option 3: Disable auto-capture (only capture specified pages)
+# PAGES_TO_CAPTURE=off
+
+# Capture mode
+# "full"   = capture all discovered pages up to MAX_PAGES
+# "manual" = only capture pages listed in PAGES_TO_CAPTURE
+CAPTURE_MODE=manual
+
+# Maximum pages to capture in auto/full mode
+MAX_PAGES=50
+
+# Viewport dimensions (pixels)
+VIEWPORT_WIDTH=1920
+VIEWPORT_HEIGHT=1080
+
+# Wait time after page load before capturing (milliseconds)
+# Increase this if pages have slow-loading content or animations
+WAIT_AFTER_LOAD=2000
+```
+
+## Workflow
+
+```bash
+# 1. Create a new project (requires --force-create)
+node cli.js new --project test-com --force-create
+
+# 2. Capture the existing platform
+node cli.js capture --project test-com --url https://your-platform.com
+
+# 3. Check for existing prototype (if any)
+node cli.js detect --project test-com
+
+# 4. Generate implementation plan
+node cli.js plan --project test-com --feature "Add chatbot widget"
+
+# 5. Generate prototype guidance (shows paths and colors)
+node cli.js generate --project test-com
+
+# 6. Validate colors after implementation
+node cli.js validate-colors --project test-com
+```
+
+## Usage Notes
+
+- The skill will read credentials when running the capture phase
+- Credentials are only used locally for browser automation
+- Never commit this file to version control with real credentials
+- Add CLAUDE.md to your .gitignore if it contains credentials
+- ALL prototype files must be created in `projects/<project>/prototype/`
+- Use ONLY colors from `design-tokens.json` - no Tailwind defaults
